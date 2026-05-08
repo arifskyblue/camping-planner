@@ -221,6 +221,18 @@
     border-radius: 6px;
     text-align: center;
   }
+  .meal-na-select {
+    width: 100% !important;
+    padding: 7px 8px !important;
+    border: 1.5px dashed var(--border) !important;
+    border-radius: 6px !important;
+    background: var(--na-bg) !important;
+    color: var(--na-text) !important;
+    font-size: 0.8rem !important;
+    cursor: pointer;
+  }
+  .meal-na-select:focus { border-color: var(--ember) !important; color: var(--text) !important; }
+  option { color: var(--text); background: white; }
   .meal-input-wrap { display: flex; flex-direction: column; gap: 3px; }
   .meal-name-input { font-size: 0.84rem !important; padding: 6px 8px !important; border-radius: 6px !important; }
   .ing-btn {
@@ -765,10 +777,9 @@ function mealApplies(dateStr, meal) {
   const arr = timeToMins(state.trip.checkinTime||'14:00');
   const dep = timeToMins(state.trip.checkoutTime||'12:00');
   const bf = timeToMins(state.rules.breakfast||'10:00');
-  const lu = timeToMins(state.rules.lunch||'13:00');
   const di = timeToMins(state.rules.dinner||'17:00');
   if (meal==='breakfast') { if (isIn && arr>=bf) return false; return true; }
-  if (meal==='lunch') { if (isIn && arr>=lu) return false; if (isOut && dep<=lu) return false; return true; }
+  if (meal==='lunch') { return true; } // lunch always counts every day
   if (meal==='dinner') { if (isOut && dep<=di) return false; return true; }
   return true;
 }
@@ -802,8 +813,28 @@ function buildMealTable() {
       const key = `${d}_${meal}`;
       const m = state.meals[key]||{name:'',ingredients:[]};
       const cnt = (m.ingredients||[]).length;
-      if (!mealApplies(d, meal)) {
-        html += `<td><div class="meal-cell-na">N/A</div></td>`;
+      const defaultNA = !mealApplies(d, meal);
+      // overridden means user manually flipped it via the dropdown
+      const overridden = state.meals[key]&&state.meals[key].overridden;
+      const showInput = !defaultNA || overridden;
+
+      if (defaultNA) {
+        // Check-in or check-out day where this meal is N/A by default — show dropdown
+        html += `<td>
+          <select class="meal-na-select" onchange="toggleMealOverride('${key}', this.value)">
+            <option value="na" ${!overridden?'selected':''}>— N/A</option>
+            <option value="add" ${overridden?'selected':''}>✏️ Add meal</option>
+          </select>
+          ${overridden ? `<div class="meal-input-wrap" style="margin-top:6px">
+            <input type="text" class="meal-name-input" placeholder="Add meal..."
+              value="${escHtml(m.name)}"
+              onchange="saveMeal('${key}',this.value)"
+              oninput="saveMeal('${key}',this.value)">
+            <button class="ing-btn" onclick="openModal('${key}')">
+              ${cnt>0?`✅ ${cnt} ingredient${cnt!==1?'s':''}`:'+ ingredients'}
+            </button>
+          </div>` : ''}
+        </td>`;
       } else {
         html += `<td><div class="meal-input-wrap">
           <input type="text" class="meal-name-input" placeholder="Add meal..."
@@ -820,6 +851,18 @@ function buildMealTable() {
   });
   html += '</tbody></table></div>';
   container.innerHTML = html;
+}
+
+function toggleMealOverride(key, val) {
+  if (!state.meals[key]) state.meals[key] = {name:'',ingredients:[]};
+  if (val === 'add') {
+    state.meals[key].overridden = true;
+  } else {
+    state.meals[key].overridden = false;
+    state.meals[key].name = '';
+  }
+  save();
+  buildMealTable();
 }
 
 function saveMeal(key, value) {
