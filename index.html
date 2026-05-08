@@ -1390,8 +1390,7 @@ document.addEventListener('input', e => {
     </div>`;
   } else if (guessed) {
     const exists = state.packing.some(g => g.cat.toLowerCase() === guessed.toLowerCase());
-    html = `→ Will add to <strong>${guessed}</strong>${exists ? '' : ' <span style="color:var(--ember-light)">(new group)</span>'}`;
-  } else {
+    html = `→ Will add to <strong>${guessed}</strong>${exists ? '' : ' <span style="color:var(--ember-light)">(new group)</span>'} &nbsp;<button class="sugg-btn" style="padding:2px 10px;font-size:0.7rem;display:inline-flex" onclick="showGroupSuggestion('${text.replace(/'/g,"\\'")}', getBroadSuggestions('${text.replace(/'/g,"\\'")}'))">change</button>`;  } else {
     // No keyword match — show group picker live so user doesn't have to hit Add first
     showGroupSuggestion(text, getBroadSuggestions(text));
     return;
