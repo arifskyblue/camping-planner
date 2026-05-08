@@ -1141,15 +1141,50 @@ function renderGrocery() {
     if(!catItems.length) return;
     html+=`<div class="grocery-section"><div class="grocery-section-title">${cat}</div>`;
     catItems.forEach((item,idx)=>{
-      html+=`<div class="grocery-item">
-        <input type="checkbox">
-        <span>${item.qty?`<span class="grocery-qty">${escHtml(item.qty)}${item.unit?' '+escHtml(item.unit):''}</span> `:''}${escHtml(item.name)}</span>
-        <span class="grocery-from">${escHtml(item.from||'')}</span>
-      </div>`;
+      if(item.manual){
+        // Find the real index in state.manualGrocery
+        const mi = state.manualGrocery.findIndex(g=>g.name===item.name&&g.qty===item.qty&&g.unit===item.unit&&g.from===item.from);
+        html+=`<div class="grocery-item">
+          <input type="checkbox" ${item.bought?'checked':''} onchange="toggleManualGrocery(${mi})">
+          <span class="${item.bought?'bought':''}">${item.qty?`<span class="grocery-qty">${escHtml(item.qty)}${item.unit?' '+escHtml(item.unit):''}</span> `:''}${escHtml(item.name)}</span>
+          <span class="grocery-from">Manual</span>
+          <button class="btn btn-xs btn-outline" onclick="editManualGrocery(${mi})" style="padding:2px 7px;font-size:0.7rem;margin-left:4px">✏️</button>
+          <button class="btn btn-xs btn-outline" onclick="deleteManualGrocery(${mi})" style="padding:2px 7px;font-size:0.7rem;color:#c0392b;border-color:#c0392b">✕</button>
+        </div>`;
+      } else {
+        html+=`<div class="grocery-item">
+          <input type="checkbox">
+          <span>${item.qty?`<span class="grocery-qty">${escHtml(item.qty)}${item.unit?' '+escHtml(item.unit):''}</span> `:''}${escHtml(item.name)}</span>
+          <span class="grocery-from">${escHtml(item.from||'')}</span>
+        </div>`;
+      }
     });
     html+='</div>';
   });
   container.innerHTML=html;
+}
+function toggleManualGrocery(mi) {
+  if(state.manualGrocery[mi]) {
+    state.manualGrocery[mi].bought = !state.manualGrocery[mi].bought;
+    save(); renderGrocery();
+  }
+}
+function editManualGrocery(mi) {
+  const item = state.manualGrocery[mi];
+  if(!item) return;
+  const name = prompt('Item name:', item.name);
+  if(name===null) return;
+  const qty = prompt('Quantity:', item.qty||'');
+  if(qty===null) return;
+  const unit = prompt('Unit (e.g. kg, packs):', item.unit||'');
+  if(unit===null) return;
+  state.manualGrocery[mi] = { ...item, name: name.trim()||item.name, qty, unit };
+  save(); renderGrocery();
+}
+function deleteManualGrocery(mi) {
+  if(!confirm(`Remove "${state.manualGrocery[mi].name}" from grocery list?`)) return;
+  state.manualGrocery.splice(mi, 1);
+  save(); renderGrocery();
 }
 function addManualGrocery() {
   const name=prompt('Item name:');
