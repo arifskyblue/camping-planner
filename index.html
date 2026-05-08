@@ -319,7 +319,12 @@
     color: var(--cream) !important;
   }
   .sugg-smart:hover { background: var(--forest) !important; }
-  .sugg-divider {
+  .sugg-create {
+    background: transparent !important;
+    border: 1.5px dashed var(--moss) !important;
+    color: var(--moss) !important;
+  }
+  .sugg-create:hover { background: rgba(74,124,74,0.08) !important; }
     font-size: 0.7rem;
     color: var(--muted);
     margin: 8px 0 5px;
@@ -1271,7 +1276,10 @@ function showGroupSuggestion(text, groups) {
     html += `<button class="sugg-btn" onclick="pickSuggestion('${g.replace(/'/g,"\\'")}','${text.replace(/'/g,"\\'")}')">${g}</button>`;
   });
   html += `<button class="sugg-btn sugg-general" onclick="pickGeneral('${text.replace(/'/g,"\\'")}')">📦 General</button>`;
-  html += `</div></div>`;
+  html += `</div>`;
+  html += `<div class="sugg-divider">not what you want?</div>`;
+  html += `<div class="sugg-btns"><button class="sugg-btn sugg-create" onclick="createNewGroupForItem()">✏️ Create New Group</button></div>`;
+  html += `</div>`;
 
   preview.innerHTML = html;
 }
@@ -1315,8 +1323,12 @@ function hideSuggestion() {
 }
 
 function pickSuggestion(groupName, text) {
-  const ci = state.packing.findIndex(g => g.cat === groupName);
-  if (ci === -1) return;
+  // Find existing group or create it if it doesn't exist yet
+  let ci = state.packing.findIndex(g => g.cat === groupName);
+  if (ci === -1) {
+    state.packing.push({ cat: groupName, items: [] });
+    ci = state.packing.length - 1;
+  }
   const inp = document.getElementById('quick-pack-input');
   inp.value = text;
   quickAddPackItem(ci);
@@ -1330,6 +1342,20 @@ function pickGeneral(text) {
   }
   const inp = document.getElementById('quick-pack-input');
   inp.value = text;
+  quickAddPackItem(ci);
+}
+
+function createNewGroupForItem() {
+  const inp = document.getElementById('quick-pack-input');
+  const itemText = inp.value.trim();
+  const groupName = prompt('Name your new group:');
+  if (!groupName || !groupName.trim()) return;
+  let ci = state.packing.findIndex(g => g.cat === groupName.trim());
+  if (ci === -1) {
+    state.packing.push({ cat: groupName.trim(), items: [] });
+    ci = state.packing.length - 1;
+  }
+  inp.value = itemText;
   quickAddPackItem(ci);
 }
 
