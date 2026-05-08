@@ -1207,8 +1207,8 @@ function guessPackGroup(text) {
 }
 
 function getBroadSuggestions(text) {
-  // Return top 3 existing groups as move suggestions when no match
-  return state.packing.map(g => g.cat).slice(0, 4);
+  // Return ALL current group names dynamically — always reflects latest state
+  return state.packing.map(g => g.cat);
 }
 
 function quickAddPackItem(forceCi) {
@@ -1392,7 +1392,9 @@ document.addEventListener('input', e => {
     const exists = state.packing.some(g => g.cat.toLowerCase() === guessed.toLowerCase());
     html = `→ Will add to <strong>${guessed}</strong>${exists ? '' : ' <span style="color:var(--ember-light)">(new group)</span>'}`;
   } else {
-    html = `<span style="color:var(--sage)">→ No group matched — you'll pick one when you add</span>`;
+    // No keyword match — show group picker live so user doesn't have to hit Add first
+    showGroupSuggestion(text, getBroadSuggestions(text));
+    return;
   }
   preview.innerHTML = html;
 });
