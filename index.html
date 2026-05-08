@@ -1111,19 +1111,32 @@ function collapseAll() {
 
 // Keyword → group name mapping for auto-sort
 const PACK_RULES = [
-  { group:'Shelter',       words:['tent','tarp','pole','poles','stake','stakes','sleeping bag','sleeping pad','air mattress','mattress','rain fly','fly','groundsheet','hammock'] },
-  { group:'Kitchen',       words:['stove','fuel','pot','pan','pots','pans','utensil','plate','cup','mug','cutlery','fork','spoon','knife','cutting board','cooler','ice pack','can opener','dish soap','sponge','tin foil','foil','lighter','matches','bottle','kettle','thermos','container'] },
-  { group:'Clothing',      words:['jacket','fleece','shirt','pants','shorts','socks','underwear','boots','shoes','sandals','hat','cap','gloves','scarf','sweater','hoodie','swimsuit','rain jacket','sunglasses','layers'] },
-  { group:'Safety & Hygiene', words:['first aid','bandage','sunscreen','bug spray','insect','repellent','toilet paper','hand sanitizer','sanitizer','headlamp','flashlight','batteries','whistle','map','compass','soap','shampoo','toothbrush','toothpaste','towel','medication','medicine','allergy'] },
-  { group:'Fun & Extras',  words:['chair','chairs','firewood','firestarter','fire starter','cards','game','games','book','frisbee','ball','charger','power bank','camera','binoculars','fishing','kite','speaker','radio'] },
+  { group:'Shelter', words:['tent','tarp','pole','poles','stake','stakes','sleeping bag','sleeping pad','air mattress','mattress','rain fly','fly','groundsheet','hammock','canopy','awning','bivvy','bivi','ground cloth'] },
+  { group:'Kitchen', words:['stove','fuel','pot','pan','pots','pans','utensil','plate','cup','mug','cutlery','fork','spoon','knife','cutting board','cooler','ice pack','can opener','dish soap','sponge','tin foil','foil','bottle','kettle','thermos','container','bowl','colander','tong','spatula','ladle','skewer','grill','bbq','barbecue','dutch oven','cast iron','coffee','percolator','french press'] },
+  { group:'Clothing', words:['jacket','fleece','shirt','pants','shorts','socks','underwear','boots','shoes','sandals','hat','cap','gloves','scarf','sweater','hoodie','swimsuit','rain jacket','sunglasses','layers','vest','toque','beanie','buff','gaiters','poncho','raincoat','long johns','base layer'] },
+  { group:'Safety & Hygiene', words:['first aid','bandage','sunscreen','bug spray','insect','repellent','toilet paper','hand sanitizer','sanitizer','headlamp','flashlight','batteries','whistle','map','compass','soap','shampoo','toothbrush','toothpaste','towel','medication','medicine','allergy','antiseptic','gauze','splint','epipen','inhaler','flare','emergency','safety pin','tweezer','tick','wound'] },
+  { group:'Lighting', words:['light','lights','lantern','lamp','string light','fairy light','solar light','led','candle','torch','glow','lumens','bulb','beacon','headlight'] },
+  { group:'Tools & Camp Gear', words:['axe','hatchet','saw','shovel','rope','cord','paracord','bungee','carabiner','tape','duct tape','zip tie','tie down','strap','tarp clip','mallet','hammer','nail','screw','multi tool','multitool','leatherman','wrench','pliers','drill','pump','repair kit','patch','seam sealer','waterproof','trowel','peg','pegs'] },
+  { group:'Fun & Extras', words:['chair','chairs','firewood','firestarter','fire starter','kindling','cards','game','games','book','frisbee','ball','charger','power bank','camera','binoculars','fishing','kite','speaker','radio','hammock stand','volleyball','badminton','bocce','cornhole','projector','drone','tripod','journal','puzzle'] },
+  { group:'Navigation & Electronics', words:['gps','phone','tablet','laptop','solar panel','battery pack','cable','adapter','converter','walkie talkie','radio','weather radio','watch','altimeter','barometer','satellite','garmin','google maps'] },
 ];
 
 function guessPackGroup(text) {
   const lower = text.toLowerCase();
+  // First try exact rules
   for (const rule of PACK_RULES) {
     if (rule.words.some(w => lower.includes(w))) return rule.group;
   }
+  // Then try fuzzy match against existing group names
+  for (const cat of state.packing) {
+    if (lower.includes(cat.cat.toLowerCase())) return cat.cat;
+  }
   return null;
+}
+
+function smartGroupName(text) {
+  // Capitalise the item as a group name when no rule matches
+  return text.split(' ').map(w=>w.charAt(0).toUpperCase()+w.slice(1)).join(' ');
 }
 
 function quickAddPackItem() {
@@ -1132,18 +1145,21 @@ function quickAddPackItem() {
   if (!text) return;
 
   const guessed = guessPackGroup(text);
-  let ci = state.packing.findIndex(g => g.cat.toLowerCase() === (guessed||'').toLowerCase());
+  let ci = guessed ? state.packing.findIndex(g => g.cat.toLowerCase() === guessed.toLowerCase()) : -1;
 
   if (guessed && ci === -1) {
-    // Group doesn't exist yet — create it
+    // Suggested group doesn't exist yet — create it
     state.packing.push({ cat: guessed, items: [] });
     ci = state.packing.length - 1;
   }
+
   if (ci === -1) {
-    // No match at all — put in last group or create "General"
-    ci = state.packing.findIndex(g => g.cat === 'General');
+    // No keyword match at all — create a sensibly named new group
+    const newGroup = smartGroupName(text);
+    // Check if a group with that name already exists
+    ci = state.packing.findIndex(g => g.cat.toLowerCase() === newGroup.toLowerCase());
     if (ci === -1) {
-      state.packing.push({ cat: 'General', items: [] });
+      state.packing.push({ cat: newGroup, items: [] });
       ci = state.packing.length - 1;
     }
   }
@@ -1157,7 +1173,7 @@ function quickAddPackItem() {
   // Brief flash to show where it landed
   setTimeout(() => {
     const el = document.getElementById(`pack-body-${ci}`);
-    if (el) { el.style.background='rgba(74,124,74,0.08)'; setTimeout(()=>el.style.background='',700); }
+    if (el) { el.style.background='rgba(74,124,74,0.1)'; setTimeout(()=>el.style.background='',800); }
   }, 50);
 }
 
@@ -1169,12 +1185,9 @@ document.addEventListener('input', e => {
   if (!preview) return;
   if (!text) { preview.innerHTML = ''; return; }
   const guessed = guessPackGroup(text);
-  const exists = guessed && state.packing.some(g => g.cat.toLowerCase() === guessed.toLowerCase());
-  if (guessed) {
-    preview.innerHTML = `→ Will add to <strong>${guessed}</strong>${exists ? '' : ' <span style="color:var(--ember)">(new group)</span>'}`;
-  } else {
-    preview.innerHTML = `→ Will add to <strong>General</strong>`;
-  }
+  const groupName = guessed || smartGroupName(text);
+  const exists = state.packing.some(g => g.cat.toLowerCase() === groupName.toLowerCase());
+  preview.innerHTML = `→ Will add to <strong>${groupName}</strong>${exists ? '' : ' <span style="color:var(--ember-light)">(new group)</span>'}`;
 });
 function togglePack(ci,ii) { state.packing[ci].items[ii].checked=!state.packing[ci].items[ii].checked; save(); renderPacking(); }
 function deletePack(ci,ii) { state.packing[ci].items.splice(ii,1); save(); renderPacking(); }
