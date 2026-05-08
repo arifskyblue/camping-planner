@@ -279,7 +279,44 @@
   .ing-unit { width: 75px !important; flex: 0 0 75px !important; }
   .ing-list { margin-bottom: 10px; }
 
-  /* COLLAPSIBLE PACKING GROUPS */
+  .quick-add-card {
+    background: var(--forest);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+  }
+  .quick-add-label {
+    font-weight: 700;
+    font-size: 0.82rem;
+    color: var(--cream);
+    margin-bottom: 2px;
+    letter-spacing: 0.02em;
+  }
+  .quick-add-hint {
+    font-size: 0.72rem;
+    color: var(--sage);
+    margin-bottom: 10px;
+  }
+  .quick-add-row {
+    display: flex;
+    gap: 8px;
+  }
+  .quick-add-row input {
+    flex: 1;
+    background: rgba(255,255,255,0.1) !important;
+    border-color: rgba(255,255,255,0.2) !important;
+    color: var(--cream) !important;
+    border-radius: 8px !important;
+  }
+  .quick-add-row input::placeholder { color: var(--sage) !important; }
+  .quick-add-row input:focus { border-color: var(--sage) !important; background: rgba(255,255,255,0.15) !important; }
+  .quick-add-preview {
+    font-size: 0.76rem;
+    color: var(--sage);
+    margin-top: 7px;
+    min-height: 18px;
+  }
+  .quick-add-preview strong { color: var(--cream); }
   .pack-group {
     background: var(--card-bg);
     border: 1px solid var(--border);
@@ -997,6 +1034,15 @@ function renderPacking() {
         <button class="btn btn-outline btn-sm" onclick="expandAll()" style="flex:1;justify-content:center">▼ Expand All</button>
         <button class="btn btn-outline btn-sm" onclick="collapseAll()" style="flex:1;justify-content:center">▲ Collapse All</button>
       </div>
+    </div>
+    <div class="quick-add-card">
+      <div class="quick-add-label">⚡ Quick Add Item</div>
+      <div class="quick-add-hint">Type anything — it'll auto-sort into the right group</div>
+      <div class="quick-add-row">
+        <input type="text" id="quick-pack-input" placeholder="e.g. rain jacket, sunscreen, camp stove..." onkeydown="if(event.key==='Enter')quickAddPackItem()">
+        <button class="btn btn-primary" onclick="quickAddPackItem()">Add</button>
+      </div>
+      <div id="quick-add-preview" class="quick-add-preview"></div>
     </div>`;
 
   let html='';
@@ -1062,6 +1108,74 @@ function collapseAll() {
   state.packing.forEach((_,ci)=>{ packExpanded[ci]=false; });
   renderPacking();
 }
+
+// Keyword → group name mapping for auto-sort
+const PACK_RULES = [
+  { group:'Shelter',       words:['tent','tarp','pole','poles','stake','stakes','sleeping bag','sleeping pad','air mattress','mattress','rain fly','fly','groundsheet','hammock'] },
+  { group:'Kitchen',       words:['stove','fuel','pot','pan','pots','pans','utensil','plate','cup','mug','cutlery','fork','spoon','knife','cutting board','cooler','ice pack','can opener','dish soap','sponge','tin foil','foil','lighter','matches','bottle','kettle','thermos','container'] },
+  { group:'Clothing',      words:['jacket','fleece','shirt','pants','shorts','socks','underwear','boots','shoes','sandals','hat','cap','gloves','scarf','sweater','hoodie','swimsuit','rain jacket','sunglasses','layers'] },
+  { group:'Safety & Hygiene', words:['first aid','bandage','sunscreen','bug spray','insect','repellent','toilet paper','hand sanitizer','sanitizer','headlamp','flashlight','batteries','whistle','map','compass','soap','shampoo','toothbrush','toothpaste','towel','medication','medicine','allergy'] },
+  { group:'Fun & Extras',  words:['chair','chairs','firewood','firestarter','fire starter','cards','game','games','book','frisbee','ball','charger','power bank','camera','binoculars','fishing','kite','speaker','radio'] },
+];
+
+function guessPackGroup(text) {
+  const lower = text.toLowerCase();
+  for (const rule of PACK_RULES) {
+    if (rule.words.some(w => lower.includes(w))) return rule.group;
+  }
+  return null;
+}
+
+function quickAddPackItem() {
+  const inp = document.getElementById('quick-pack-input');
+  const text = inp.value.trim();
+  if (!text) return;
+
+  const guessed = guessPackGroup(text);
+  let ci = state.packing.findIndex(g => g.cat.toLowerCase() === (guessed||'').toLowerCase());
+
+  if (guessed && ci === -1) {
+    // Group doesn't exist yet — create it
+    state.packing.push({ cat: guessed, items: [] });
+    ci = state.packing.length - 1;
+  }
+  if (ci === -1) {
+    // No match at all — put in last group or create "General"
+    ci = state.packing.findIndex(g => g.cat === 'General');
+    if (ci === -1) {
+      state.packing.push({ cat: 'General', items: [] });
+      ci = state.packing.length - 1;
+    }
+  }
+
+  packExpanded[ci] = true;
+  state.packing[ci].items.push({ id: 'p'+Date.now(), text, checked: false });
+  save();
+  inp.value = '';
+  document.getElementById('quick-add-preview').innerHTML = '';
+  renderPacking();
+  // Brief flash to show where it landed
+  setTimeout(() => {
+    const el = document.getElementById(`pack-body-${ci}`);
+    if (el) { el.style.background='rgba(74,124,74,0.08)'; setTimeout(()=>el.style.background='',700); }
+  }, 50);
+}
+
+// Live preview of which group the item will go to
+document.addEventListener('input', e => {
+  if (e.target.id !== 'quick-pack-input') return;
+  const text = e.target.value.trim();
+  const preview = document.getElementById('quick-add-preview');
+  if (!preview) return;
+  if (!text) { preview.innerHTML = ''; return; }
+  const guessed = guessPackGroup(text);
+  const exists = guessed && state.packing.some(g => g.cat.toLowerCase() === guessed.toLowerCase());
+  if (guessed) {
+    preview.innerHTML = `→ Will add to <strong>${guessed}</strong>${exists ? '' : ' <span style="color:var(--ember)">(new group)</span>'}`;
+  } else {
+    preview.innerHTML = `→ Will add to <strong>General</strong>`;
+  }
+});
 function togglePack(ci,ii) { state.packing[ci].items[ii].checked=!state.packing[ci].items[ii].checked; save(); renderPacking(); }
 function deletePack(ci,ii) { state.packing[ci].items.splice(ii,1); save(); renderPacking(); }
 function addPackItem(ci) {
