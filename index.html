@@ -24,6 +24,8 @@
     --na-bg: #e8e0d0;
     --na-text: #a09080;
     --card-bg: #fdfaf4;
+    --sync-green: #2e7d32;
+    --sync-red: #c62828;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -35,25 +37,67 @@
     min-height: 100vh;
   }
 
-  /* HEADER */
   header {
     background: var(--forest);
-    padding: 20px 24px 16px;
+    padding: 16px 20px 12px;
     position: sticky;
     top: 0;
     z-index: 100;
     box-shadow: 0 2px 12px rgba(0,0,0,0.3);
   }
+  .header-top { display: flex; align-items: center; justify-content: space-between; }
   header h1 {
     font-family: 'Playfair Display', serif;
     color: var(--cream);
-    font-size: 1.6rem;
+    font-size: 1.5rem;
     letter-spacing: 0.02em;
   }
   header h1 span { color: var(--sage); }
-  .header-sub { color: var(--sage); font-size: 0.75rem; margin-top: 2px; letter-spacing: 0.08em; text-transform: uppercase; }
+  .header-sub { color: var(--sage); font-size: 0.72rem; margin-top: 2px; letter-spacing: 0.08em; text-transform: uppercase; }
 
-  /* TAB NAV */
+  /* SYNC BAR */
+  .sync-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    flex-wrap: wrap;
+  }
+  .sync-status {
+    font-size: 0.75rem;
+    color: var(--sage);
+    flex: 1;
+    min-width: 120px;
+  }
+  .sync-status.synced { color: #81c784; }
+  .sync-status.error { color: #ef9a9a; }
+  .sync-status.syncing { color: #fff176; }
+
+  .btn-sync {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 7px 14px;
+    border: none;
+    border-radius: 20px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.18s;
+    letter-spacing: 0.02em;
+  }
+  .btn-save-sync { background: var(--ember); color: white; }
+  .btn-save-sync:hover { background: var(--ember-light); }
+  .btn-load-sync { background: rgba(255,255,255,0.12); color: var(--cream); border: 1px solid rgba(255,255,255,0.2); }
+  .btn-load-sync:hover { background: rgba(255,255,255,0.2); }
+  .btn-sync:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .spin { display: inline-block; animation: spin 1s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
   .tabs {
     background: var(--pine);
     display: flex;
@@ -67,12 +111,12 @@
     border: none;
     color: var(--sage);
     font-family: 'DM Sans', sans-serif;
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     font-weight: 500;
-    padding: 12px 18px;
+    padding: 11px 16px;
     cursor: pointer;
     white-space: nowrap;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.05em;
     text-transform: uppercase;
     border-bottom: 3px solid transparent;
     transition: all 0.2s;
@@ -80,78 +124,68 @@
   .tab-btn:hover { color: var(--cream); background: rgba(255,255,255,0.05); }
   .tab-btn.active { color: var(--cream); border-bottom-color: var(--ember); background: rgba(255,255,255,0.08); }
 
-  /* MAIN */
-  main { max-width: 900px; margin: 0 auto; padding: 24px 16px 80px; }
+  main { max-width: 900px; margin: 0 auto; padding: 20px 14px 80px; }
 
   .section { display: none; }
   .section.active { display: block; }
 
-  /* CARDS */
   .card {
     background: var(--card-bg);
     border: 1px solid var(--border);
     border-radius: 12px;
-    padding: 20px;
-    margin-bottom: 16px;
+    padding: 18px;
+    margin-bottom: 14px;
   }
   .card-title {
     font-family: 'Playfair Display', serif;
-    font-size: 1.1rem;
+    font-size: 1.05rem;
     color: var(--forest);
-    margin-bottom: 16px;
+    margin-bottom: 14px;
     display: flex;
     align-items: center;
     gap: 8px;
   }
-  .card-title .icon { font-size: 1.2rem; }
 
-  /* FORM ELEMENTS */
   label {
     display: block;
-    font-size: 0.75rem;
+    font-size: 0.73rem;
     font-weight: 600;
     color: var(--muted);
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    margin-bottom: 5px;
+    margin-bottom: 4px;
   }
   input[type="date"], input[type="time"], input[type="text"], select, textarea {
     width: 100%;
-    padding: 10px 12px;
+    padding: 9px 11px;
     border: 1.5px solid var(--border);
     border-radius: 8px;
     font-family: 'DM Sans', sans-serif;
-    font-size: 0.9rem;
+    font-size: 0.88rem;
     background: var(--white);
     color: var(--text);
     transition: border-color 0.2s;
     appearance: none;
   }
-  input:focus, select:focus, textarea:focus {
-    outline: none;
-    border-color: var(--moss);
-  }
-  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
-  .form-row.single { grid-template-columns: 1fr; }
-  .form-group { margin-bottom: 14px; }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--moss); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+  .form-group { margin-bottom: 12px; }
 
-  /* BUTTONS */
   .btn {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    padding: 10px 18px;
+    gap: 5px;
+    padding: 9px 16px;
     border: none;
     border-radius: 8px;
     font-family: 'DM Sans', sans-serif;
-    font-size: 0.85rem;
+    font-size: 0.83rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.18s;
-    letter-spacing: 0.02em;
   }
   .btn-primary { background: var(--ember); color: white; }
-  .btn-primary:hover { background: var(--ember-light); transform: translateY(-1px); }
+  .btn-primary:hover { background: var(--ember-light); }
   .btn-forest { background: var(--forest); color: white; }
   .btn-forest:hover { background: var(--pine); }
   .btn-outline { background: transparent; color: var(--forest); border: 1.5px solid var(--border); }
@@ -159,49 +193,38 @@
   .btn-danger { background: transparent; color: #c0392b; border: 1.5px solid #c0392b; }
   .btn-danger:hover { background: #c0392b; color: white; }
   .btn-sm { padding: 6px 12px; font-size: 0.78rem; }
-  .btn-xs { padding: 4px 8px; font-size: 0.72rem; }
+  .btn-xs { padding: 3px 7px; font-size: 0.71rem; }
 
   /* MEAL TABLE */
-  .meal-table-wrap { overflow-x: auto; margin-top: 8px; }
-  table.meal-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.85rem;
-  }
+  .meal-table-wrap { overflow-x: auto; margin-top: 6px; }
+  table.meal-table { width: 100%; border-collapse: collapse; font-size: 0.84rem; }
   .meal-table th {
     background: var(--forest);
     color: var(--cream);
-    padding: 10px 12px;
+    padding: 9px 10px;
     text-align: left;
     font-weight: 600;
-    font-size: 0.75rem;
+    font-size: 0.72rem;
     letter-spacing: 0.06em;
     text-transform: uppercase;
   }
-  .meal-table td {
-    border-bottom: 1px solid var(--border);
-    padding: 8px 10px;
-    vertical-align: top;
-  }
+  .meal-table td { border-bottom: 1px solid var(--border); padding: 7px 8px; vertical-align: top; }
   .meal-table tr:last-child td { border-bottom: none; }
-  .meal-table tr:nth-child(even) td { background: rgba(0,0,0,0.02); }
+  .meal-table tr:nth-child(even) td { background: rgba(0,0,0,0.015); }
 
   .meal-cell-na {
     background: var(--na-bg) !important;
     color: var(--na-text);
     font-style: italic;
-    font-size: 0.8rem;
-    padding: 10px !important;
+    font-size: 0.78rem;
+    padding: 9px !important;
     border-radius: 6px;
+    text-align: center;
   }
-  .meal-input-wrap { display: flex; flex-direction: column; gap: 4px; }
-  .meal-name-input {
-    font-size: 0.85rem !important;
-    padding: 7px 9px !important;
-    border-radius: 6px !important;
-  }
+  .meal-input-wrap { display: flex; flex-direction: column; gap: 3px; }
+  .meal-name-input { font-size: 0.84rem !important; padding: 6px 8px !important; border-radius: 6px !important; }
   .ing-btn {
-    font-size: 0.72rem;
+    font-size: 0.7rem;
     color: var(--ember);
     background: none;
     border: none;
@@ -210,20 +233,11 @@
     padding: 0;
     font-family: 'DM Sans', sans-serif;
     font-weight: 600;
-    letter-spacing: 0.02em;
   }
   .ing-btn:hover { text-decoration: underline; }
-  .date-label {
-    font-weight: 700;
-    font-size: 0.8rem;
-    color: var(--forest);
-  }
-  .day-tag {
-    font-size: 0.7rem;
-    color: var(--muted);
-  }
+  .date-label { font-weight: 700; font-size: 0.78rem; color: var(--forest); }
 
-  /* INGREDIENT MODAL */
+  /* MODAL */
   .modal-overlay {
     display: none;
     position: fixed;
@@ -232,86 +246,62 @@
     z-index: 200;
     align-items: center;
     justify-content: center;
-    padding: 20px;
+    padding: 16px;
   }
   .modal-overlay.open { display: flex; }
   .modal {
     background: var(--card-bg);
     border-radius: 14px;
-    padding: 24px;
+    padding: 22px;
     width: 100%;
-    max-width: 480px;
-    max-height: 80vh;
+    max-width: 460px;
+    max-height: 82vh;
     overflow-y: auto;
     box-shadow: 0 20px 60px rgba(0,0,0,0.3);
   }
-  .modal-title {
-    font-family: 'Playfair Display', serif;
-    font-size: 1.1rem;
-    color: var(--forest);
-    margin-bottom: 4px;
-  }
-  .modal-sub { font-size: 0.8rem; color: var(--muted); margin-bottom: 16px; }
-  .ing-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
+  .modal-title { font-family: 'Playfair Display', serif; font-size: 1.05rem; color: var(--forest); margin-bottom: 3px; }
+  .modal-sub { font-size: 0.78rem; color: var(--muted); margin-bottom: 14px; }
+  .ing-row { display: flex; gap: 6px; margin-bottom: 7px; align-items: center; }
   .ing-row input { flex: 1; }
-  .ing-qty { width: 70px !important; flex: 0 0 70px !important; }
-  .ing-unit { width: 80px !important; flex: 0 0 80px !important; }
-  .ing-list { margin-bottom: 12px; }
+  .ing-qty { width: 65px !important; flex: 0 0 65px !important; }
+  .ing-unit { width: 75px !important; flex: 0 0 75px !important; }
+  .ing-list { margin-bottom: 10px; }
 
-  /* PACKING LIST */
-  .pack-category { margin-bottom: 20px; }
+  /* PACKING */
+  .pack-category { margin-bottom: 16px; }
   .pack-cat-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 10px;
-    padding-bottom: 6px;
+    margin-bottom: 8px;
+    padding-bottom: 5px;
     border-bottom: 2px solid var(--border);
   }
-  .pack-cat-name {
-    font-weight: 700;
-    font-size: 0.85rem;
-    color: var(--forest);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-  }
+  .pack-cat-name { font-weight: 700; font-size: 0.82rem; color: var(--forest); text-transform: uppercase; letter-spacing: 0.06em; }
   .pack-item {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 8px 0;
-    border-bottom: 1px solid rgba(0,0,0,0.05);
+    gap: 9px;
+    padding: 7px 0;
+    border-bottom: 1px solid rgba(0,0,0,0.04);
   }
   .pack-item:last-child { border-bottom: none; }
-  .pack-item input[type="checkbox"] {
-    width: 18px;
-    height: 18px;
-    accent-color: var(--moss);
-    cursor: pointer;
-    flex-shrink: 0;
-  }
-  .pack-item-text { flex: 1; font-size: 0.88rem; }
+  .pack-item input[type="checkbox"] { width: 17px; height: 17px; accent-color: var(--moss); cursor: pointer; flex-shrink: 0; }
+  .pack-item-text { flex: 1; font-size: 0.86rem; }
   .pack-item.checked .pack-item-text { text-decoration: line-through; color: var(--muted); }
-  .pack-item-assignee {
-    font-size: 0.72rem;
-    color: var(--white);
-    background: var(--moss);
-    border-radius: 20px;
-    padding: 2px 8px;
-  }
-  .pack-add-row { display: flex; gap: 8px; margin-top: 10px; }
+  .pack-add-row { display: flex; gap: 7px; margin-top: 9px; }
   .pack-add-row input { flex: 1; }
 
-  /* GROCERY LIST */
-  .grocery-section { margin-bottom: 20px; }
+  /* GROCERY */
+  .grocery-section { margin-bottom: 18px; }
   .grocery-section-title {
     font-weight: 700;
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     color: var(--forest);
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    margin-bottom: 8px;
-    padding: 6px 10px;
+    margin-bottom: 7px;
+    padding: 5px 10px;
     background: var(--sand);
     border-radius: 6px;
     border-left: 3px solid var(--ember);
@@ -319,61 +309,48 @@
   .grocery-item {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 7px 4px;
-    border-bottom: 1px solid rgba(0,0,0,0.05);
-    font-size: 0.88rem;
+    gap: 9px;
+    padding: 6px 3px;
+    border-bottom: 1px solid rgba(0,0,0,0.04);
+    font-size: 0.86rem;
   }
-  .grocery-item input[type="checkbox"] {
-    width: 16px; height: 16px;
-    accent-color: var(--ember);
-    flex-shrink: 0;
-    cursor: pointer;
-  }
+  .grocery-item input[type="checkbox"] { width: 15px; height: 15px; accent-color: var(--ember); flex-shrink: 0; cursor: pointer; }
   .grocery-item.bought { text-decoration: line-through; color: var(--muted); }
-  .grocery-qty { color: var(--ember); font-weight: 600; margin-right: 2px; }
-  .grocery-from { font-size: 0.72rem; color: var(--muted); margin-left: auto; }
+  .grocery-qty { color: var(--ember); font-weight: 600; margin-right: 1px; }
+  .grocery-from { font-size: 0.7rem; color: var(--muted); margin-left: auto; white-space: nowrap; }
 
-  /* EXPORT BAR */
   .export-bar {
     display: flex;
-    gap: 8px;
+    gap: 7px;
     flex-wrap: wrap;
-    padding: 14px;
+    padding: 12px;
     background: var(--sand);
     border-radius: 10px;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
     align-items: center;
   }
-  .export-bar span { font-size: 0.8rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-right: 4px; }
+  .export-bar span { font-size: 0.76rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-right: 2px; }
 
-  /* TRIP SUMMARY BAR */
   .trip-bar {
     background: var(--forest);
     border-radius: 10px;
-    padding: 14px 18px;
-    margin-bottom: 20px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
     color: var(--cream);
     display: flex;
-    gap: 20px;
+    gap: 18px;
     flex-wrap: wrap;
     align-items: center;
-    font-size: 0.85rem;
+    font-size: 0.83rem;
   }
   .trip-bar strong { color: var(--sage); }
-  .trip-bar-item { display: flex; flex-direction: column; gap: 2px; }
-  .trip-bar-label { font-size: 0.68rem; color: var(--sage); text-transform: uppercase; letter-spacing: 0.06em; }
+  .trip-bar-item { display: flex; flex-direction: column; gap: 1px; }
+  .trip-bar-label { font-size: 0.66rem; color: var(--sage); text-transform: uppercase; letter-spacing: 0.06em; }
 
-  /* EMPTY STATE */
-  .empty-state {
-    text-align: center;
-    padding: 40px 20px;
-    color: var(--muted);
-  }
-  .empty-state .big { font-size: 2.5rem; margin-bottom: 8px; }
-  .empty-state p { font-size: 0.9rem; }
+  .empty-state { text-align: center; padding: 36px 16px; color: var(--muted); }
+  .empty-state .big { font-size: 2.2rem; margin-bottom: 7px; }
+  .empty-state p { font-size: 0.87rem; }
 
-  /* BADGE */
   .badge {
     display: inline-flex;
     align-items: center;
@@ -381,62 +358,70 @@
     background: var(--ember);
     color: white;
     border-radius: 20px;
-    font-size: 0.7rem;
+    font-size: 0.68rem;
     font-weight: 700;
-    padding: 1px 7px;
-    min-width: 20px;
+    padding: 1px 6px;
+    min-width: 18px;
   }
 
-  .flex-between { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
-  .flex-gap { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-
-  .progress-bar-wrap { background: var(--border); border-radius: 20px; height: 6px; margin-top: 6px; }
-  .progress-bar { height: 6px; background: var(--moss); border-radius: 20px; transition: width 0.3s; }
-
-  @media (max-width: 600px) {
-    .form-row { grid-template-columns: 1fr; }
-    main { padding: 16px 12px 80px; }
-    .tab-btn { padding: 11px 13px; font-size: 0.72rem; }
-  }
+  .flex-between { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 7px; margin-bottom: 12px; }
+  .progress-bar-wrap { background: var(--border); border-radius: 20px; height: 5px; margin-top: 5px; }
+  .progress-bar { height: 5px; background: var(--moss); border-radius: 20px; transition: width 0.3s; }
 
   .toast {
     position: fixed;
-    bottom: 24px;
+    bottom: 22px;
     left: 50%;
     transform: translateX(-50%) translateY(80px);
     background: var(--forest);
     color: var(--cream);
-    padding: 10px 20px;
+    padding: 9px 18px;
     border-radius: 30px;
-    font-size: 0.85rem;
+    font-size: 0.83rem;
     font-weight: 500;
     z-index: 999;
     transition: transform 0.3s ease;
     white-space: nowrap;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.25);
   }
   .toast.show { transform: translateX(-50%) translateY(0); }
+
+  @media (max-width: 600px) {
+    .form-row { grid-template-columns: 1fr; }
+    main { padding: 14px 10px 80px; }
+    .tab-btn { padding: 10px 12px; font-size: 0.7rem; }
+  }
 </style>
 </head>
 <body>
 
 <header>
-  <h1>🏕️ Camp<span>Planner</span></h1>
-  <div class="header-sub">Your family camping organizer</div>
+  <div class="header-top">
+    <div>
+      <h1>🏕️ Camp<span>Planner</span></h1>
+      <div class="header-sub">Family camping organizer</div>
+    </div>
+  </div>
+  <div class="sync-bar">
+    <div class="sync-status" id="sync-status">⬤ Not synced yet</div>
+    <button class="btn-sync btn-load-sync" id="btn-load" onclick="loadFromSheet()">↓ Load Latest</button>
+    <button class="btn-sync btn-save-sync" id="btn-save" onclick="saveToSheet()">↑ Save & Sync</button>
+  </div>
 </header>
 
 <div class="tabs">
-  <button class="tab-btn active" onclick="showTab('trip')">⛺ Trip Setup</button>
-  <button class="tab-btn" onclick="showTab('meals')">🍳 Meals</button>
-  <button class="tab-btn" onclick="showTab('packing')">🎒 Packing</button>
-  <button class="tab-btn" onclick="showTab('grocery')">🛒 Grocery</button>
+  <button class="tab-btn active" onclick="showTab('trip', this)">⛺ Trip Setup</button>
+  <button class="tab-btn" onclick="showTab('meals', this)">🍳 Meals</button>
+  <button class="tab-btn" onclick="showTab('packing', this)">🎒 Packing</button>
+  <button class="tab-btn" onclick="showTab('grocery', this)">🛒 Grocery</button>
 </div>
 
 <main>
 
-<!-- ===== TRIP SETUP ===== -->
+<!-- TRIP SETUP -->
 <div id="tab-trip" class="section active">
   <div class="card">
-    <div class="card-title"><span class="icon">📅</span> Trip Details</div>
+    <div class="card-title">📅 Trip Details</div>
     <div class="form-row">
       <div class="form-group">
         <label>Check-in Date</label>
@@ -467,68 +452,74 @@
         <input type="text" id="trip-people" placeholder="e.g. 2 adults, 1 child" oninput="saveTripMeta()">
       </div>
     </div>
-    <div class="form-group single">
+    <div class="form-group">
       <label>Trip Notes</label>
-      <textarea id="trip-notes" rows="2" placeholder="Site #, special instructions, etc." oninput="saveTripMeta()" style="resize:vertical"></textarea>
+      <textarea id="trip-notes" rows="2" placeholder="Site #, special instructions..." oninput="saveTripMeta()" style="resize:vertical"></textarea>
     </div>
   </div>
 
   <div class="card">
-    <div class="card-title"><span class="icon">⚙️</span> Meal Time Rules</div>
-    <p style="font-size:0.82rem;color:var(--muted);margin-bottom:14px;">Meals are auto-grayed out based on arrival/departure time using these cutoffs.</p>
+    <div class="card-title">⚙️ Meal Time Rules</div>
+    <p style="font-size:0.8rem;color:var(--muted);margin-bottom:12px">Meals auto-grey out based on your arrival and departure time.</p>
     <div class="form-row">
       <div class="form-group">
-        <label>Breakfast cutoff (arrive before)</label>
-        <input type="time" id="rule-breakfast" value="10:00" onchange="saveRules(); buildMealTable()">
+        <label>Breakfast — arrive before</label>
+        <input type="time" id="rule-breakfast" value="10:00" onchange="saveRules();buildMealTable()">
       </div>
       <div class="form-group">
-        <label>Lunch cutoff (arrive/leave by)</label>
-        <input type="time" id="rule-lunch" value="13:00" onchange="saveRules(); buildMealTable()">
+        <label>Lunch — arrive/leave by</label>
+        <input type="time" id="rule-lunch" value="13:00" onchange="saveRules();buildMealTable()">
       </div>
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label>Dinner cutoff (leave after)</label>
-        <input type="time" id="rule-dinner" value="17:00" onchange="saveRules(); buildMealTable()">
+        <label>Dinner — leave after</label>
+        <input type="time" id="rule-dinner" value="17:00" onchange="saveRules();buildMealTable()">
       </div>
     </div>
   </div>
 
   <div id="trip-summary-wrap"></div>
+
+  <div class="card" style="border-left:3px solid var(--ember)">
+    <div class="card-title" style="margin-bottom:8px">🔄 How Sync Works</div>
+    <p style="font-size:0.82rem;color:var(--muted);line-height:1.6">
+      <strong style="color:var(--forest)">↑ Save & Sync</strong> — saves everything to Google Sheets. Do this after any changes.<br>
+      <strong style="color:var(--forest)">↓ Load Latest</strong> — pulls the latest data. Your wife taps this after you save to see your updates.<br><br>
+      Both buttons are always visible at the top of the page.
+    </p>
+  </div>
 </div>
 
-<!-- ===== MEALS ===== -->
+<!-- MEALS -->
 <div id="tab-meals" class="section">
   <div id="meals-trip-bar"></div>
   <div class="card">
-    <div class="flex-between">
-      <div class="card-title" style="margin-bottom:0"><span class="icon">🍳</span> Meal Planner</div>
-    </div>
-    <p style="font-size:0.8rem;color:var(--muted);margin-bottom:14px;">Type a meal name in each cell. Click <strong>+ ingredients</strong> to add items — they'll show up in your grocery list automatically.</p>
+    <div class="card-title">🍳 Meal Planner</div>
+    <p style="font-size:0.78rem;color:var(--muted);margin-bottom:12px">Type a meal name. Tap <strong>+ ingredients</strong> to add items — they show up in your grocery list automatically.</p>
     <div id="meal-table-container">
       <div class="empty-state"><div class="big">📅</div><p>Set your check-in and check-out dates in Trip Setup first.</p></div>
     </div>
   </div>
 </div>
 
-<!-- ===== PACKING ===== -->
+<!-- PACKING -->
 <div id="tab-packing" class="section">
   <div class="export-bar">
     <span>Export:</span>
     <button class="btn btn-outline btn-sm" onclick="exportPackingExcel()">📥 Excel</button>
-    <button class="btn btn-outline btn-sm" onclick="copyPackingText()">📋 Copy Text</button>
-    <button class="btn btn-outline btn-sm" onclick="window.print()">🖨️ Print</button>
+    <button class="btn btn-outline btn-sm" onclick="copyPackingText()">📋 Copy</button>
   </div>
   <div id="packing-progress-wrap"></div>
   <div id="packing-container"></div>
 </div>
 
-<!-- ===== GROCERY ===== -->
+<!-- GROCERY -->
 <div id="tab-grocery" class="section">
   <div class="export-bar">
     <span>Export:</span>
     <button class="btn btn-outline btn-sm" onclick="exportGroceryExcel()">📥 Excel</button>
-    <button class="btn btn-outline btn-sm" onclick="copyGroceryText()">📋 Copy (WhatsApp)</button>
+    <button class="btn btn-outline btn-sm" onclick="copyGroceryText()">📋 WhatsApp</button>
     <button class="btn btn-outline btn-sm" onclick="addManualGrocery()">➕ Add Item</button>
   </div>
   <div id="grocery-container"></div>
@@ -548,7 +539,7 @@
       <input type="text" id="new-ing-unit" placeholder="unit" class="ing-unit">
       <button class="btn btn-primary btn-sm" onclick="addIngredient()">Add</button>
     </div>
-    <div style="display:flex;gap:8px;margin-top:16px;">
+    <div style="display:flex;gap:8px;margin-top:14px">
       <button class="btn btn-forest" onclick="closeModal()" style="flex:1">Done ✓</button>
     </div>
   </div>
@@ -558,89 +549,160 @@
 
 <script>
 // ============================================================
+// GOOGLE SHEETS SYNC
+// ============================================================
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwFaJncD89WFf1nOEsAKhutNMHWVMziOGn-oGi5paRS9L8Ciwwcz9k-IUNWP4NMz0R1_w/exec';
+
+async function saveToSheet() {
+  const btn = document.getElementById('btn-save');
+  const status = document.getElementById('sync-status');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin">⟳</span> Saving...';
+  status.className = 'sync-status syncing';
+  status.textContent = '⬤ Saving to cloud...';
+  try {
+    const payload = JSON.stringify(state);
+    await fetch(SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
+      body: payload
+    });
+    // no-cors means we can't read response, but if no error thrown it worked
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+    status.className = 'sync-status synced';
+    status.textContent = `✓ Saved at ${timeStr} — tell her to tap Load`;
+    save(); // also save locally
+    showToast('✓ Saved! Tell your wife to tap Load Latest');
+  } catch(e) {
+    status.className = 'sync-status error';
+    status.textContent = '✕ Save failed — check connection';
+    showToast('Save failed. Check your internet connection.');
+  }
+  btn.disabled = false;
+  btn.innerHTML = '↑ Save & Sync';
+}
+
+async function loadFromSheet() {
+  const btn = document.getElementById('btn-load');
+  const status = document.getElementById('sync-status');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin">⟳</span> Loading...';
+  status.className = 'sync-status syncing';
+  status.textContent = '⬤ Loading latest data...';
+  try {
+    const res = await fetch(SCRIPT_URL + '?t=' + Date.now());
+    const text = await res.text();
+    if (!text || text === '{}') {
+      status.className = 'sync-status';
+      status.textContent = '⬤ No data found on cloud yet';
+      showToast('Nothing saved to cloud yet. Save first!');
+      btn.disabled = false;
+      btn.innerHTML = '↓ Load Latest';
+      return;
+    }
+    const loaded = JSON.parse(text);
+    state = { ...state, ...loaded };
+    save();
+    restoreUI();
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+    status.className = 'sync-status synced';
+    status.textContent = `✓ Loaded at ${timeStr}`;
+    showToast('✓ All data loaded!');
+  } catch(e) {
+    status.className = 'sync-status error';
+    status.textContent = '✕ Load failed — check connection';
+    showToast('Load failed. Check your internet connection.');
+  }
+  btn.disabled = false;
+  btn.innerHTML = '↓ Load Latest';
+}
+
+// ============================================================
 // STATE
 // ============================================================
 let state = {
   trip: { checkinDate:'', checkinTime:'14:00', checkoutDate:'', checkoutTime:'12:00', location:'', people:'', notes:'' },
   rules: { breakfast:'10:00', lunch:'13:00', dinner:'17:00' },
-  meals: {}, // key: "YYYY-MM-DD_breakfast" => { name, ingredients: [{name,qty,unit}] }
+  meals: {},
   packing: [
     { cat:'Shelter', items:[
-      {id:'p1',text:'Tent + poles + stakes',assignee:'',checked:false},
-      {id:'p2',text:'Sleeping bags',assignee:'',checked:false},
-      {id:'p3',text:'Sleeping pads / air mattress',assignee:'',checked:false},
-      {id:'p4',text:'Tarp / rain fly',assignee:'',checked:false},
+      {id:'p1',text:'Tent + poles + stakes',checked:false},
+      {id:'p2',text:'Sleeping bags',checked:false},
+      {id:'p3',text:'Sleeping pads / air mattress',checked:false},
+      {id:'p4',text:'Tarp / rain fly',checked:false},
     ]},
     { cat:'Kitchen', items:[
-      {id:'p5',text:'Camp stove + fuel',assignee:'',checked:false},
-      {id:'p6',text:'Pots, pans, utensils',assignee:'',checked:false},
-      {id:'p7',text:'Plates, cups, cutlery',assignee:'',checked:false},
-      {id:'p8',text:'Cutting board + knife',assignee:'',checked:false},
-      {id:'p9',text:'Cooler + ice packs',assignee:'',checked:false},
-      {id:'p10',text:'Can opener',assignee:'',checked:false},
-      {id:'p11',text:'Dish soap + sponge',assignee:'',checked:false},
-      {id:'p12',text:'Tin foil',assignee:'',checked:false},
+      {id:'p5',text:'Camp stove + fuel',checked:false},
+      {id:'p6',text:'Pots, pans, utensils',checked:false},
+      {id:'p7',text:'Plates, cups, cutlery',checked:false},
+      {id:'p8',text:'Cutting board + knife',checked:false},
+      {id:'p9',text:'Cooler + ice packs',checked:false},
+      {id:'p10',text:'Can opener',checked:false},
+      {id:'p11',text:'Dish soap + sponge',checked:false},
+      {id:'p12',text:'Tin foil',checked:false},
     ]},
     { cat:'Clothing', items:[
-      {id:'p13',text:'Warm jacket / fleece',assignee:'',checked:false},
-      {id:'p14',text:'Rain jacket',assignee:'',checked:false},
-      {id:'p15',text:'Layers (shirts, pants)',assignee:'',checked:false},
-      {id:'p16',text:'Socks & underwear (extra)',assignee:'',checked:false},
-      {id:'p17',text:'Hiking boots / camp shoes',assignee:'',checked:false},
-      {id:'p18',text:'Hat + sunglasses',assignee:'',checked:false},
+      {id:'p13',text:'Warm jacket / fleece',checked:false},
+      {id:'p14',text:'Rain jacket',checked:false},
+      {id:'p15',text:'Layers (shirts, pants)',checked:false},
+      {id:'p16',text:'Socks & underwear (extra)',checked:false},
+      {id:'p17',text:'Hiking boots / camp shoes',checked:false},
+      {id:'p18',text:'Hat + sunglasses',checked:false},
     ]},
     { cat:'Safety & Hygiene', items:[
-      {id:'p19',text:'First aid kit',assignee:'',checked:false},
-      {id:'p20',text:'Bug spray',assignee:'',checked:false},
-      {id:'p21',text:'Sunscreen',assignee:'',checked:false},
-      {id:'p22',text:'Toilet paper',assignee:'',checked:false},
-      {id:'p23',text:'Hand sanitizer',assignee:'',checked:false},
-      {id:'p24',text:'Headlamp + batteries',assignee:'',checked:false},
-      {id:'p25',text:'Matches / lighter',assignee:'',checked:false},
+      {id:'p19',text:'First aid kit',checked:false},
+      {id:'p20',text:'Bug spray',checked:false},
+      {id:'p21',text:'Sunscreen',checked:false},
+      {id:'p22',text:'Toilet paper',checked:false},
+      {id:'p23',text:'Hand sanitizer',checked:false},
+      {id:'p24',text:'Headlamp + batteries',checked:false},
+      {id:'p25',text:'Matches / lighter',checked:false},
     ]},
     { cat:'Fun & Extras', items:[
-      {id:'p26',text:'Camping chairs',assignee:'',checked:false},
-      {id:'p27',text:'Firewood / firestarter',assignee:'',checked:false},
-      {id:'p28',text:'Cards / games',assignee:'',checked:false},
-      {id:'p29',text:'Phone charger / power bank',assignee:'',checked:false},
+      {id:'p26',text:'Camping chairs',checked:false},
+      {id:'p27',text:'Firewood / firestarter',checked:false},
+      {id:'p28',text:'Cards / games',checked:false},
+      {id:'p29',text:'Phone charger / power bank',checked:false},
     ]},
   ],
   manualGrocery: [],
 };
 
 let activeModalKey = null;
+let activeTab = 'trip';
 
 // ============================================================
-// PERSIST
+// PERSIST LOCALLY
 // ============================================================
 function save() {
-  try { localStorage.setItem('campplanner_v2', JSON.stringify(state)); } catch(e){}
+  try { localStorage.setItem('campplanner_v3', JSON.stringify(state)); } catch(e){}
 }
 function load() {
   try {
-    const raw = localStorage.getItem('campplanner_v2');
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      state = { ...state, ...parsed };
-    }
+    const raw = localStorage.getItem('campplanner_v3');
+    if (raw) state = { ...state, ...JSON.parse(raw) };
   } catch(e){}
 }
 
 // ============================================================
 // TABS
 // ============================================================
-function showTab(tab) {
+function showTab(tab, btn) {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('tab-' + tab).classList.add('active');
-  event.target.classList.add('active');
+  if (btn) btn.classList.add('active');
+  activeTab = tab;
   if (tab === 'meals') { updateMealsTripBar(); buildMealTable(); }
-  if (tab === 'packing') { renderPacking(); }
-  if (tab === 'grocery') { renderGrocery(); }
+  if (tab === 'packing') renderPacking();
+  if (tab === 'grocery') renderGrocery();
 }
 
 // ============================================================
-// TRIP SETUP
+// TRIP
 // ============================================================
 function onTripChange() {
   state.trip.checkinDate = document.getElementById('checkin-date').value;
@@ -649,7 +711,7 @@ function onTripChange() {
   state.trip.checkoutTime = document.getElementById('checkout-time').value;
   save();
   renderTripSummary();
-  buildMealTable();
+  if (activeTab === 'meals') buildMealTable();
 }
 function saveTripMeta() {
   state.trip.location = document.getElementById('trip-location').value;
@@ -665,68 +727,49 @@ function saveRules() {
 }
 function renderTripSummary() {
   const el = document.getElementById('trip-summary-wrap');
-  if (!state.trip.checkinDate || !state.trip.checkoutDate) { el.innerHTML = ''; return; }
+  if (!state.trip.checkinDate || !state.trip.checkoutDate) { el.innerHTML=''; return; }
   const days = getTripDays();
   el.innerHTML = `<div class="trip-bar">
     <div class="trip-bar-item"><div class="trip-bar-label">Check-in</div><strong>${fmtDate(state.trip.checkinDate)} @ ${state.trip.checkinTime}</strong></div>
     <div class="trip-bar-item"><div class="trip-bar-label">Check-out</div><strong>${fmtDate(state.trip.checkoutDate)} @ ${state.trip.checkoutTime}</strong></div>
     <div class="trip-bar-item"><div class="trip-bar-label">Duration</div><strong>${days.length} day${days.length!==1?'s':''}</strong></div>
-    ${state.trip.location ? `<div class="trip-bar-item"><div class="trip-bar-label">Location</div><strong>${state.trip.location}</strong></div>` : ''}
+    ${state.trip.location?`<div class="trip-bar-item"><div class="trip-bar-label">Location</div><strong>${state.trip.location}</strong></div>`:''}
   </div>`;
 }
 
 // ============================================================
-// DATES & MEAL LOGIC
+// DATE HELPERS
 // ============================================================
 const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
-function fmtDate(dateStr) {
-  const [y,m,d] = dateStr.split('-').map(Number);
-  const dt = new Date(y,m-1,d);
-  return `${DAYS[dt.getDay()]} ${MONTHS[m-1]} ${d}`;
+function fmtDate(d) {
+  const [y,m,day] = d.split('-').map(Number);
+  const dt = new Date(y,m-1,day);
+  return `${DAYS[dt.getDay()]} ${MONTHS[m-1]} ${day}`;
 }
-
 function getTripDays() {
   if (!state.trip.checkinDate || !state.trip.checkoutDate) return [];
-  const start = new Date(state.trip.checkinDate + 'T00:00:00');
-  const end = new Date(state.trip.checkoutDate + 'T00:00:00');
+  const start = new Date(state.trip.checkinDate+'T00:00:00');
+  const end = new Date(state.trip.checkoutDate+'T00:00:00');
   const days = [];
   let cur = new Date(start);
-  while (cur <= end) {
-    days.push(cur.toISOString().split('T')[0]);
-    cur.setDate(cur.getDate() + 1);
-  }
+  while (cur <= end) { days.push(cur.toISOString().split('T')[0]); cur.setDate(cur.getDate()+1); }
   return days;
 }
-
-function timeToMins(t) {
-  const [h,m] = t.split(':').map(Number);
-  return h*60+m;
-}
+function timeToMins(t) { const [h,m] = t.split(':').map(Number); return h*60+m; }
 
 function mealApplies(dateStr, meal) {
-  const isCheckin = dateStr === state.trip.checkinDate;
-  const isCheckout = dateStr === state.trip.checkoutDate;
-  const arrMins = timeToMins(state.trip.checkinTime || '14:00');
-  const depMins = timeToMins(state.trip.checkoutTime || '12:00');
-  const bfCut = timeToMins(state.rules.breakfast || '10:00');
-  const luCut = timeToMins(state.rules.lunch || '13:00');
-  const diCut = timeToMins(state.rules.dinner || '17:00');
-
-  if (meal === 'breakfast') {
-    if (isCheckin && arrMins >= bfCut) return false;
-    return true;
-  }
-  if (meal === 'lunch') {
-    if (isCheckin && arrMins >= luCut) return false;
-    if (isCheckout && depMins <= luCut) return false;
-    return true;
-  }
-  if (meal === 'dinner') {
-    if (isCheckout && depMins <= diCut) return false;
-    return true;
-  }
+  const isIn = dateStr === state.trip.checkinDate;
+  const isOut = dateStr === state.trip.checkoutDate;
+  const arr = timeToMins(state.trip.checkinTime||'14:00');
+  const dep = timeToMins(state.trip.checkoutTime||'12:00');
+  const bf = timeToMins(state.rules.breakfast||'10:00');
+  const lu = timeToMins(state.rules.lunch||'13:00');
+  const di = timeToMins(state.rules.dinner||'17:00');
+  if (meal==='breakfast') { if (isIn && arr>=bf) return false; return true; }
+  if (meal==='lunch') { if (isIn && arr>=lu) return false; if (isOut && dep<=lu) return false; return true; }
+  if (meal==='dinner') { if (isOut && dep<=di) return false; return true; }
   return true;
 }
 
@@ -735,9 +778,9 @@ function mealApplies(dateStr, meal) {
 // ============================================================
 function updateMealsTripBar() {
   const el = document.getElementById('meals-trip-bar');
-  if (!state.trip.checkinDate || !state.trip.checkoutDate) { el.innerHTML=''; return; }
+  if (!state.trip.checkinDate||!state.trip.checkoutDate) { el.innerHTML=''; return; }
   const days = getTripDays();
-  el.innerHTML = `<div class="trip-bar" style="margin-bottom:16px">
+  el.innerHTML = `<div class="trip-bar">
     <div class="trip-bar-item"><div class="trip-bar-label">Trip</div><strong>${fmtDate(state.trip.checkinDate)} → ${fmtDate(state.trip.checkoutDate)}</strong></div>
     <div class="trip-bar-item"><div class="trip-bar-label">Days</div><strong>${days.length}</strong></div>
     ${state.trip.location?`<div class="trip-bar-item"><div class="trip-bar-label">Location</div><strong>${state.trip.location}</strong></div>`:''}
@@ -752,25 +795,23 @@ function buildMealTable() {
     return;
   }
   const meals = ['breakfast','lunch','dinner'];
-  const mealLabels = { breakfast:'🌅 Breakfast', lunch:'☀️ Lunch', dinner:'🌙 Dinner' };
-  let html = '<div class="meal-table-wrap"><table class="meal-table"><thead><tr><th>Date</th><th>Breakfast</th><th>Lunch</th><th>Dinner</th></tr></thead><tbody>';
+  let html = '<div class="meal-table-wrap"><table class="meal-table"><thead><tr><th>Date</th><th>🌅 Breakfast</th><th>☀️ Lunch</th><th>🌙 Dinner</th></tr></thead><tbody>';
   days.forEach(d => {
     html += `<tr><td><div class="date-label">${fmtDate(d)}</div></td>`;
     meals.forEach(meal => {
-      const applies = mealApplies(d, meal);
       const key = `${d}_${meal}`;
-      const m = state.meals[key] || { name:'', ingredients:[] };
-      const ingCount = m.ingredients.length;
-      if (!applies) {
+      const m = state.meals[key]||{name:'',ingredients:[]};
+      const cnt = (m.ingredients||[]).length;
+      if (!mealApplies(d, meal)) {
         html += `<td><div class="meal-cell-na">N/A</div></td>`;
       } else {
         html += `<td><div class="meal-input-wrap">
-          <input type="text" class="meal-name-input" placeholder="Add meal..." 
+          <input type="text" class="meal-name-input" placeholder="Add meal..."
             value="${escHtml(m.name)}"
-            onchange="saveMeal('${key}', this.value)"
-            oninput="saveMeal('${key}', this.value)">
+            onchange="saveMeal('${key}',this.value)"
+            oninput="saveMeal('${key}',this.value)">
           <button class="ing-btn" onclick="openModal('${key}')">
-            ${ingCount > 0 ? `✅ ${ingCount} ingredient${ingCount!==1?'s':''}` : '+ ingredients'}
+            ${cnt>0?`✅ ${cnt} ingredient${cnt!==1?'s':''}`:'+ ingredients'}
           </button>
         </div></td>`;
       }
@@ -782,11 +823,10 @@ function buildMealTable() {
 }
 
 function saveMeal(key, value) {
-  if (!state.meals[key]) state.meals[key] = { name:'', ingredients:[] };
+  if (!state.meals[key]) state.meals[key] = {name:'',ingredients:[]};
   state.meals[key].name = value;
   save();
 }
-
 function escHtml(s) {
   return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
@@ -797,292 +837,236 @@ function escHtml(s) {
 function openModal(key) {
   activeModalKey = key;
   const [date, meal] = key.split('_');
-  const m = state.meals[key] || { name:'', ingredients:[] };
-  document.getElementById('modal-meal-title').textContent = m.name || 'Ingredients';
+  const m = state.meals[key]||{name:'',ingredients:[]};
+  document.getElementById('modal-meal-title').textContent = m.name||'Ingredients';
   document.getElementById('modal-meal-sub').textContent = `${fmtDate(date)} — ${meal.charAt(0).toUpperCase()+meal.slice(1)}`;
   renderIngList();
   document.getElementById('ing-modal').classList.add('open');
-  document.getElementById('new-ing-name').focus();
+  setTimeout(()=>document.getElementById('new-ing-name').focus(),100);
 }
-
 function closeModal() {
   document.getElementById('ing-modal').classList.remove('open');
   activeModalKey = null;
   buildMealTable();
-  renderGrocery();
+  if (activeTab==='grocery') renderGrocery();
 }
-
 function renderIngList() {
   const el = document.getElementById('ing-list');
   const m = state.meals[activeModalKey];
-  if (!m || !m.ingredients.length) { el.innerHTML = '<p style="color:var(--muted);font-size:0.82rem;padding:8px 0">No ingredients yet.</p>'; return; }
-  el.innerHTML = m.ingredients.map((ing, i) => `
+  if (!m||!m.ingredients||!m.ingredients.length) {
+    el.innerHTML='<p style="color:var(--muted);font-size:0.8rem;padding:6px 0">No ingredients yet.</p>';
+    return;
+  }
+  el.innerHTML = m.ingredients.map((ing,i)=>`
     <div class="ing-row">
-      <input type="text" value="${escHtml(ing.name)}" placeholder="Ingredient" style="flex:1" onchange="updateIng(${i},'name',this.value)">
-      <input type="text" value="${escHtml(ing.qty)}" placeholder="Qty" class="ing-qty" onchange="updateIng(${i},'qty',this.value)">
-      <input type="text" value="${escHtml(ing.unit)}" placeholder="unit" class="ing-unit" onchange="updateIng(${i},'unit',this.value)">
+      <input type="text" value="${escHtml(ing.name)}" placeholder="Ingredient" onchange="updateIng(${i},'name',this.value)">
+      <input type="text" value="${escHtml(ing.qty||'')}" placeholder="Qty" class="ing-qty" onchange="updateIng(${i},'qty',this.value)">
+      <input type="text" value="${escHtml(ing.unit||'')}" placeholder="unit" class="ing-unit" onchange="updateIng(${i},'unit',this.value)">
       <button class="btn btn-danger btn-xs" onclick="removeIng(${i})">✕</button>
     </div>`).join('');
 }
-
 function addIngredient() {
   const name = document.getElementById('new-ing-name').value.trim();
   if (!name) return;
   const qty = document.getElementById('new-ing-qty').value.trim();
   const unit = document.getElementById('new-ing-unit').value.trim();
-  if (!state.meals[activeModalKey]) state.meals[activeModalKey] = { name:'', ingredients:[] };
-  state.meals[activeModalKey].ingredients.push({ name, qty, unit });
+  if (!state.meals[activeModalKey]) state.meals[activeModalKey]={name:'',ingredients:[]};
+  state.meals[activeModalKey].ingredients.push({name,qty,unit});
   save();
   renderIngList();
-  document.getElementById('new-ing-name').value = '';
-  document.getElementById('new-ing-qty').value = '';
-  document.getElementById('new-ing-unit').value = '';
+  ['new-ing-name','new-ing-qty','new-ing-unit'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('new-ing-name').focus();
 }
-
-function updateIng(i, field, val) {
-  if (state.meals[activeModalKey]) {
-    state.meals[activeModalKey].ingredients[i][field] = val;
-    save();
-  }
+function updateIng(i,field,val) {
+  if (state.meals[activeModalKey]) { state.meals[activeModalKey].ingredients[i][field]=val; save(); }
 }
 function removeIng(i) {
-  if (state.meals[activeModalKey]) {
-    state.meals[activeModalKey].ingredients.splice(i, 1);
-    save();
-    renderIngList();
-  }
+  if (state.meals[activeModalKey]) { state.meals[activeModalKey].ingredients.splice(i,1); save(); renderIngList(); }
 }
-
-document.getElementById('new-ing-name').addEventListener('keydown', e => { if(e.key==='Enter') addIngredient(); });
+document.getElementById('new-ing-name').addEventListener('keydown',e=>{ if(e.key==='Enter') addIngredient(); });
 
 // ============================================================
-// PACKING LIST
+// PACKING
 // ============================================================
 function renderPacking() {
-  const container = document.getElementById('packing-container');
   const total = state.packing.reduce((a,c)=>a+c.items.length,0);
   const checked = state.packing.reduce((a,c)=>a+c.items.filter(i=>i.checked).length,0);
-  const pct = total ? Math.round(checked/total*100) : 0;
+  const pct = total?Math.round(checked/total*100):0;
   document.getElementById('packing-progress-wrap').innerHTML = `
-    <div class="card" style="padding:14px 16px;margin-bottom:12px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-        <span style="font-size:0.82rem;font-weight:600;color:var(--forest)">Packing Progress</span>
-        <span style="font-size:0.85rem;font-weight:700;color:var(--ember)">${checked}/${total} packed</span>
+    <div class="card" style="padding:12px 16px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+        <span style="font-size:0.8rem;font-weight:600;color:var(--forest)">Packing Progress</span>
+        <span style="font-size:0.83rem;font-weight:700;color:var(--ember)">${checked}/${total} packed (${pct}%)</span>
       </div>
       <div class="progress-bar-wrap"><div class="progress-bar" style="width:${pct}%"></div></div>
     </div>`;
-
-  let html = '';
-  state.packing.forEach((cat, ci) => {
-    html += `<div class="card pack-category">
+  let html='';
+  state.packing.forEach((cat,ci)=>{
+    html+=`<div class="card pack-category">
       <div class="pack-cat-header">
         <div class="pack-cat-name">${cat.cat} <span class="badge">${cat.items.filter(i=>i.checked).length}/${cat.items.length}</span></div>
       </div>`;
-    cat.items.forEach((item, ii) => {
-      html += `<div class="pack-item ${item.checked?'checked':''}" id="pi-${ci}-${ii}">
+    cat.items.forEach((item,ii)=>{
+      html+=`<div class="pack-item ${item.checked?'checked':''}">
         <input type="checkbox" ${item.checked?'checked':''} onchange="togglePack(${ci},${ii})">
         <span class="pack-item-text">${escHtml(item.text)}</span>
-        ${item.assignee ? `<span class="pack-item-assignee">${escHtml(item.assignee)}</span>` : ''}
-        <button class="btn btn-xs btn-outline" onclick="deletePack(${ci},${ii})" style="padding:3px 7px;color:#c0392b;border-color:#c0392b">✕</button>
+        <button class="btn btn-xs btn-outline" onclick="deletePack(${ci},${ii})" style="padding:2px 6px;color:#c0392b;border-color:#c0392b">✕</button>
       </div>`;
     });
-    html += `<div class="pack-add-row">
+    html+=`<div class="pack-add-row">
       <input type="text" id="pack-add-${ci}" placeholder="Add item to ${cat.cat}..." onkeydown="if(event.key==='Enter')addPackItem(${ci})">
       <button class="btn btn-outline btn-sm" onclick="addPackItem(${ci})">+ Add</button>
     </div></div>`;
   });
-  container.innerHTML = html;
+  document.getElementById('packing-container').innerHTML=html;
 }
-
-function togglePack(ci, ii) {
-  state.packing[ci].items[ii].checked = !state.packing[ci].items[ii].checked;
-  save();
-  renderPacking();
-}
-function deletePack(ci, ii) {
-  state.packing[ci].items.splice(ii, 1);
-  save();
-  renderPacking();
-}
+function togglePack(ci,ii) { state.packing[ci].items[ii].checked=!state.packing[ci].items[ii].checked; save(); renderPacking(); }
+function deletePack(ci,ii) { state.packing[ci].items.splice(ii,1); save(); renderPacking(); }
 function addPackItem(ci) {
-  const inp = document.getElementById(`pack-add-${ci}`);
-  const text = inp.value.trim();
-  if (!text) return;
-  const id = 'p' + Date.now();
-  state.packing[ci].items.push({ id, text, assignee:'', checked:false });
-  save();
-  inp.value = '';
-  renderPacking();
+  const inp=document.getElementById(`pack-add-${ci}`);
+  const text=inp.value.trim();
+  if(!text) return;
+  state.packing[ci].items.push({id:'p'+Date.now(),text,checked:false});
+  save(); inp.value=''; renderPacking();
 }
 
 // ============================================================
-// GROCERY LIST
+// GROCERY
 // ============================================================
 function getGroceryItems() {
-  const items = [];
-  // From meals
-  Object.entries(state.meals).forEach(([key, meal]) => {
-    if (!meal.ingredients || !meal.ingredients.length) return;
-    const [date, mealType] = key.split('_');
-    const mealName = meal.name || mealType;
-    meal.ingredients.forEach(ing => {
-      if (!ing.name) return;
-      items.push({ name: ing.name, qty: ing.qty, unit: ing.unit, from: mealName, date, mealType, manual: false });
-    });
+  const items=[];
+  Object.entries(state.meals).forEach(([key,meal])=>{
+    if(!meal.ingredients||!meal.ingredients.length) return;
+    const [date,mealType]=key.split('_');
+    meal.ingredients.forEach(ing=>{ if(!ing.name) return; items.push({name:ing.name,qty:ing.qty,unit:ing.unit,from:meal.name||mealType,date,mealType,manual:false}); });
   });
-  // Manual
-  state.manualGrocery.forEach(item => {
-    items.push({ ...item, manual: true });
-  });
+  state.manualGrocery.forEach(item=>items.push({...item,manual:true}));
   return items;
 }
-
 function categorizeGrocery(items) {
-  const cats = {
-    '🥩 Meat & Protein': [],
-    '🥦 Produce': [],
-    '🧀 Dairy': [],
-    '🥫 Pantry & Dry Goods': [],
-    '🧂 Spices & Condiments': [],
-    '🍞 Bread & Bakery': [],
-    '🧊 Frozen': [],
-    '🛒 Other': [],
-  };
-  const rules = [
-    { cat:'🥩 Meat & Protein', words:['chicken','beef','pork','bacon','sausage','hot dog','hotdog','fish','salmon','tuna','egg','eggs','tofu','lamb','turkey','shrimp'] },
-    { cat:'🥦 Produce', words:['onion','garlic','tomato','pepper','lettuce','carrot','potato','corn','mushroom','zucchini','cucumber','apple','banana','lemon','lime','berry','berries','spinach','kale','cabbage','celery','avocado'] },
-    { cat:'🧀 Dairy', words:['milk','cheese','butter','cream','yogurt','sour cream','margarine'] },
-    { cat:'🥫 Pantry & Dry Goods', words:['rice','pasta','noodle','bean','beans','lentil','oil','can','canned','broth','stock','flour','sugar','salt','cracker','chip','cereal','oat','oats','coffee','tea','juice','water','sauce','ketchup','mustard','mayo'] },
-    { cat:'🧂 Spices & Condiments', words:['pepper','spice','cumin','paprika','oregano','basil','thyme','cinnamon','chili','hot sauce','soy sauce','vinegar','honey','maple','syrup'] },
-    { cat:'🍞 Bread & Bakery', words:['bread','bun','buns','tortilla','wrap','bagel','muffin','pita'] },
-    { cat:'🧊 Frozen', words:['frozen','ice cream'] },
+  const cats={'🥩 Meat & Protein':[],'🥦 Produce':[],'🧀 Dairy':[],'🥫 Pantry & Dry Goods':[],'🧂 Spices & Condiments':[],'🍞 Bread & Bakery':[],'🧊 Frozen':[],'🛒 Other':[]};
+  const rules=[
+    {cat:'🥩 Meat & Protein',words:['chicken','beef','pork','bacon','sausage','hot dog','hotdog','fish','salmon','tuna','egg','eggs','tofu','lamb','turkey','shrimp']},
+    {cat:'🥦 Produce',words:['onion','garlic','tomato','pepper','lettuce','carrot','potato','corn','mushroom','zucchini','cucumber','apple','banana','lemon','lime','berry','berries','spinach','kale','cabbage','celery','avocado']},
+    {cat:'🧀 Dairy',words:['milk','cheese','butter','cream','yogurt','sour cream','margarine']},
+    {cat:'🥫 Pantry & Dry Goods',words:['rice','pasta','noodle','bean','beans','lentil','oil','can','canned','broth','stock','flour','sugar','salt','cracker','chip','cereal','oat','oats','coffee','tea','juice','water','sauce','ketchup','mustard','mayo']},
+    {cat:'🧂 Spices & Condiments',words:['pepper','spice','cumin','paprika','oregano','basil','thyme','cinnamon','chili','hot sauce','soy sauce','vinegar','honey','maple','syrup']},
+    {cat:'🍞 Bread & Bakery',words:['bread','bun','buns','tortilla','wrap','bagel','muffin','pita']},
+    {cat:'🧊 Frozen',words:['frozen','ice cream']},
   ];
-  items.forEach(item => {
-    const lower = item.name.toLowerCase();
-    let assigned = false;
-    for (const rule of rules) {
-      if (rule.words.some(w => lower.includes(w))) {
-        cats[rule.cat].push(item);
-        assigned = true;
-        break;
-      }
+  items.forEach(item=>{
+    const lower=item.name.toLowerCase();
+    let assigned=false;
+    for(const rule of rules){
+      if(rule.words.some(w=>lower.includes(w))){ cats[rule.cat].push(item); assigned=true; break; }
     }
-    if (!assigned) cats['🛒 Other'].push(item);
+    if(!assigned) cats['🛒 Other'].push(item);
   });
   return cats;
 }
-
 function renderGrocery() {
-  const container = document.getElementById('grocery-container');
-  const items = getGroceryItems();
-  if (!items.length) {
-    container.innerHTML = '<div class="empty-state"><div class="big">🛒</div><p>Add meals with ingredients in the Meals tab — they\'ll appear here automatically.</p></div>';
+  const container=document.getElementById('grocery-container');
+  const items=getGroceryItems();
+  if(!items.length){
+    container.innerHTML='<div class="empty-state"><div class="big">🛒</div><p>Add meals with ingredients in the Meals tab — they\'ll appear here automatically.</p></div>';
     return;
   }
-  const cats = categorizeGrocery(items);
-  let html = '';
-  Object.entries(cats).forEach(([cat, catItems]) => {
-    if (!catItems.length) return;
-    html += `<div class="grocery-section"><div class="grocery-section-title">${cat}</div>`;
-    catItems.forEach((item, globalIdx) => {
-      const id = `gi-${cat.replace(/\W/g,'')}-${globalIdx}`;
-      const bought = item.manual ? (item.bought||false) : false;
-      html += `<div class="grocery-item ${bought?'bought':''}" id="${id}">
-        <input type="checkbox" ${bought?'checked':''} onchange="toggleGrocery('${item.from}','${item.name}','${cat}',${globalIdx})">
+  const cats=categorizeGrocery(items);
+  let html='';
+  Object.entries(cats).forEach(([cat,catItems])=>{
+    if(!catItems.length) return;
+    html+=`<div class="grocery-section"><div class="grocery-section-title">${cat}</div>`;
+    catItems.forEach((item,idx)=>{
+      html+=`<div class="grocery-item">
+        <input type="checkbox">
         <span>${item.qty?`<span class="grocery-qty">${escHtml(item.qty)}${item.unit?' '+escHtml(item.unit):''}</span> `:''}${escHtml(item.name)}</span>
         <span class="grocery-from">${escHtml(item.from||'')}</span>
       </div>`;
     });
-    html += '</div>';
+    html+='</div>';
   });
-  container.innerHTML = html;
+  container.innerHTML=html;
 }
-
-function toggleGrocery(from, name, cat, idx) {
-  // Find in manualGrocery
-  const mi = state.manualGrocery.findIndex(g => g.name === name && g.from === from);
-  if (mi >= 0) { state.manualGrocery[mi].bought = !state.manualGrocery[mi].bought; save(); renderGrocery(); }
-}
-
 function addManualGrocery() {
-  const name = prompt('Item name:');
-  if (!name || !name.trim()) return;
-  const qty = prompt('Quantity (optional):') || '';
-  const unit = prompt('Unit (optional, e.g. kg, packs):') || '';
-  state.manualGrocery.push({ name: name.trim(), qty, unit, from: 'Manual', bought: false });
-  save();
-  renderGrocery();
+  const name=prompt('Item name:');
+  if(!name||!name.trim()) return;
+  const qty=prompt('Quantity (optional):')||'';
+  const unit=prompt('Unit (optional, e.g. kg, packs):')||'';
+  state.manualGrocery.push({name:name.trim(),qty,unit,from:'Manual',bought:false});
+  save(); renderGrocery();
 }
 
 // ============================================================
 // EXPORTS
 // ============================================================
 function exportGroceryExcel() {
-  const items = getGroceryItems();
-  const rows = [['Item','Quantity','Unit','For Meal','Category']];
-  const cats = categorizeGrocery(items);
-  Object.entries(cats).forEach(([cat, catItems]) => {
-    catItems.forEach(item => {
-      rows.push([item.name, item.qty||'', item.unit||'', item.from||'', cat]);
-    });
-  });
-  const ws = XLSX.utils.aoa_to_sheet(rows);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Grocery List');
-  XLSX.writeFile(wb, 'camping-grocery.xlsx');
+  const rows=[['Item','Quantity','Unit','For Meal','Category']];
+  const cats=categorizeGrocery(getGroceryItems());
+  Object.entries(cats).forEach(([cat,catItems])=>{ catItems.forEach(item=>{ rows.push([item.name,item.qty||'',item.unit||'',item.from||'',cat]); }); });
+  const ws=XLSX.utils.aoa_to_sheet(rows);
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Grocery List');
+  XLSX.writeFile(wb,'camping-grocery.xlsx');
   showToast('Grocery list exported!');
 }
-
 function exportPackingExcel() {
-  const rows = [['Category','Item','Packed']];
-  state.packing.forEach(cat => {
-    cat.items.forEach(item => {
-      rows.push([cat.cat, item.text, item.checked ? 'Yes' : 'No']);
-    });
-  });
-  const ws = XLSX.utils.aoa_to_sheet(rows);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Packing List');
-  XLSX.writeFile(wb, 'camping-packing.xlsx');
+  const rows=[['Category','Item','Packed']];
+  state.packing.forEach(cat=>{ cat.items.forEach(item=>{ rows.push([cat.cat,item.text,item.checked?'Yes':'No']); }); });
+  const ws=XLSX.utils.aoa_to_sheet(rows);
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Packing List');
+  XLSX.writeFile(wb,'camping-packing.xlsx');
   showToast('Packing list exported!');
 }
-
 function copyGroceryText() {
-  const items = getGroceryItems();
-  const cats = categorizeGrocery(items);
-  let text = `🛒 GROCERY LIST - ${state.trip.location || 'Camping Trip'}\n\n`;
-  Object.entries(cats).forEach(([cat, catItems]) => {
-    if (!catItems.length) return;
-    text += `${cat}\n`;
-    catItems.forEach(item => {
-      text += `  • ${item.qty?item.qty+' ':''}${item.unit?item.unit+' ':''}${item.name}\n`;
-    });
-    text += '\n';
+  const cats=categorizeGrocery(getGroceryItems());
+  let text=`🛒 GROCERY LIST${state.trip.location?' — '+state.trip.location:''}\n\n`;
+  Object.entries(cats).forEach(([cat,catItems])=>{
+    if(!catItems.length) return;
+    text+=`${cat}\n`;
+    catItems.forEach(item=>{ text+=`  • ${item.qty?item.qty+' ':''}${item.unit?item.unit+' ':''}${item.name}\n`; });
+    text+='\n';
   });
-  navigator.clipboard.writeText(text).then(() => showToast('Copied to clipboard!'));
+  navigator.clipboard.writeText(text).then(()=>showToast('Copied! Paste into WhatsApp.'));
 }
-
 function copyPackingText() {
-  let text = `🎒 PACKING LIST - ${state.trip.location || 'Camping Trip'}\n\n`;
-  state.packing.forEach(cat => {
-    text += `${cat.cat.toUpperCase()}\n`;
-    cat.items.forEach(item => {
-      text += `  [${item.checked?'✓':' '}] ${item.text}\n`;
-    });
-    text += '\n';
+  let text=`🎒 PACKING LIST${state.trip.location?' — '+state.trip.location:''}\n\n`;
+  state.packing.forEach(cat=>{
+    text+=`${cat.cat.toUpperCase()}\n`;
+    cat.items.forEach(item=>{ text+=`  [${item.checked?'✓':' '}] ${item.text}\n`; });
+    text+='\n';
   });
-  navigator.clipboard.writeText(text).then(() => showToast('Copied to clipboard!'));
+  navigator.clipboard.writeText(text).then(()=>showToast('Copied to clipboard!'));
 }
 
 // ============================================================
 // TOAST
 // ============================================================
 function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
+  const t=document.getElementById('toast');
+  t.textContent=msg;
   t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2500);
+  setTimeout(()=>t.classList.remove('show'),2800);
+}
+
+// ============================================================
+// RESTORE UI FROM STATE
+// ============================================================
+function restoreUI() {
+  if(state.trip.checkinDate) document.getElementById('checkin-date').value=state.trip.checkinDate;
+  if(state.trip.checkinTime) document.getElementById('checkin-time').value=state.trip.checkinTime;
+  if(state.trip.checkoutDate) document.getElementById('checkout-date').value=state.trip.checkoutDate;
+  if(state.trip.checkoutTime) document.getElementById('checkout-time').value=state.trip.checkoutTime;
+  if(state.trip.location) document.getElementById('trip-location').value=state.trip.location;
+  if(state.trip.people) document.getElementById('trip-people').value=state.trip.people;
+  if(state.trip.notes) document.getElementById('trip-notes').value=state.trip.notes;
+  if(state.rules.breakfast) document.getElementById('rule-breakfast').value=state.rules.breakfast;
+  if(state.rules.lunch) document.getElementById('rule-lunch').value=state.rules.lunch;
+  if(state.rules.dinner) document.getElementById('rule-dinner').value=state.rules.dinner;
+  renderTripSummary();
+  if(activeTab==='meals'){ updateMealsTripBar(); buildMealTable(); }
+  if(activeTab==='packing') renderPacking();
+  if(activeTab==='grocery') renderGrocery();
 }
 
 // ============================================================
@@ -1090,20 +1074,8 @@ function showToast(msg) {
 // ============================================================
 function init() {
   load();
-  // Restore trip fields
-  if (state.trip.checkinDate) document.getElementById('checkin-date').value = state.trip.checkinDate;
-  if (state.trip.checkinTime) document.getElementById('checkin-time').value = state.trip.checkinTime;
-  if (state.trip.checkoutDate) document.getElementById('checkout-date').value = state.trip.checkoutDate;
-  if (state.trip.checkoutTime) document.getElementById('checkout-time').value = state.trip.checkoutTime;
-  if (state.trip.location) document.getElementById('trip-location').value = state.trip.location;
-  if (state.trip.people) document.getElementById('trip-people').value = state.trip.people;
-  if (state.trip.notes) document.getElementById('trip-notes').value = state.trip.notes;
-  if (state.rules.breakfast) document.getElementById('rule-breakfast').value = state.rules.breakfast;
-  if (state.rules.lunch) document.getElementById('rule-lunch').value = state.rules.lunch;
-  if (state.rules.dinner) document.getElementById('rule-dinner').value = state.rules.dinner;
-  renderTripSummary();
+  restoreUI();
 }
-
 init();
 </script>
 </body>
