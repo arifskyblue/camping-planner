@@ -279,7 +279,54 @@
   .ing-unit { width: 75px !important; flex: 0 0 75px !important; }
   .ing-list { margin-bottom: 10px; }
 
-  .quick-add-card {
+  .drag-handle {
+    color: var(--border);
+    font-size: 1rem;
+    cursor: grab;
+    flex-shrink: 0;
+    line-height: 1;
+    padding: 0 2px;
+    user-select: none;
+  }
+  .drag-handle:active { cursor: grabbing; }
+  .pack-group.drag-over {
+    outline: 2px dashed var(--moss);
+    outline-offset: 2px;
+    background: rgba(74,124,74,0.05);
+  }
+  .pack-group.drag-over .pack-group-header { background: rgba(74,124,74,0.08); }
+  .sugg-wrap { margin-top: 4px; }
+  .sugg-label { font-size: 0.74rem; color: var(--sage); display: block; margin-bottom: 6px; }
+  .sugg-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+  .sugg-btn {
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: var(--cream);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 0.76rem;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .sugg-btn:hover { background: rgba(255,255,255,0.22); }
+  .sugg-general { background: rgba(200,96,42,0.3); border-color: var(--ember); color: var(--cream); }
+  .dupe-wrap { margin-top: 4px; }
+  .dupe-label { font-size: 0.74rem; color: #ffcc80; font-weight: 600; margin-bottom: 6px; }
+  .dupe-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(255,193,7,0.12);
+    border: 1px solid rgba(255,193,7,0.25);
+    border-radius: 7px;
+    padding: 5px 10px;
+    margin-bottom: 5px;
+  }
+  .dupe-text { font-size: 0.8rem; color: var(--cream); font-weight: 500; }
+  .dupe-group { font-size: 0.7rem; color: var(--sage); background: rgba(255,255,255,0.1); border-radius: 10px; padding: 1px 7px; }
+  .dupe-actions { display: flex; gap: 6px; margin-top: 7px; flex-wrap: wrap; }
     background: var(--forest);
     border-radius: 12px;
     padding: 14px 16px;
@@ -1055,7 +1102,8 @@ function renderPacking() {
     const allDone = catTotal > 0 && catChecked === catTotal;
     const catPct = catTotal ? Math.round(catChecked/catTotal*100) : 0;
 
-    html+=`<div class="pack-group ${isOpen?'open':''}">
+    html+=`<div class="pack-group ${isOpen?'open':''}" data-ci="${ci}"
+      ondragover="onDragOver(event,${ci})" ondrop="onDrop(event,${ci})">
       <div class="pack-group-header" onclick="toggleGroup(${ci})">
         <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0">
           <span class="pack-chevron">${isOpen?'▼':'▶'}</span>
@@ -1076,7 +1124,9 @@ function renderPacking() {
       html+=`<div style="padding:10px 4px;font-size:0.82rem;color:var(--muted);font-style:italic">No items yet — add one below.</div>`;
     }
     cat.items.forEach((item,ii)=>{
-      html+=`<div class="pack-item ${item.checked?'checked':''}">
+      html+=`<div class="pack-item ${item.checked?'checked':''}" draggable="true"
+        ondragstart="onDragStart(event,${ci},${ii})" ondragend="onDragEnd(event)">
+        <span class="drag-handle" title="Drag to move">⠿</span>
         <input type="checkbox" ${item.checked?'checked':''} onchange="togglePack(${ci},${ii})">
         <span class="pack-item-text">${escHtml(item.text)}</span>
         <button class="btn btn-xs btn-outline" onclick="deletePack(${ci},${ii})" style="padding:2px 6px;color:#c0392b;border-color:#c0392b">✕</button>
@@ -1123,58 +1173,96 @@ const PACK_RULES = [
 
 function guessPackGroup(text) {
   const lower = text.toLowerCase();
-  // First try exact rules
+  // Match against keyword rules
   for (const rule of PACK_RULES) {
     if (rule.words.some(w => lower.includes(w))) return rule.group;
   }
-  // Then try fuzzy match against existing group names
+  // Fuzzy match against existing group names
   for (const cat of state.packing) {
-    if (lower.includes(cat.cat.toLowerCase())) return cat.cat;
+    if (lower.includes(cat.cat.toLowerCase()) || cat.cat.toLowerCase().includes(lower)) return cat.cat;
   }
   return null;
 }
 
-function smartGroupName(text) {
-  // Capitalise the item as a group name when no rule matches
-  return text.split(' ').map(w=>w.charAt(0).toUpperCase()+w.slice(1)).join(' ');
+function getBroadSuggestions(text) {
+  // Return top 3 existing groups as move suggestions when no match
+  return state.packing.map(g => g.cat).slice(0, 4);
 }
 
-function quickAddPackItem() {
+function quickAddPackItem(forceCi) {
   const inp = document.getElementById('quick-pack-input');
   const text = inp.value.trim();
   if (!text) return;
 
-  const guessed = guessPackGroup(text);
-  let ci = guessed ? state.packing.findIndex(g => g.cat.toLowerCase() === guessed.toLowerCase()) : -1;
+  let ci = (forceCi !== undefined) ? forceCi : -1;
 
-  if (guessed && ci === -1) {
-    // Suggested group doesn't exist yet — create it
-    state.packing.push({ cat: guessed, items: [] });
-    ci = state.packing.length - 1;
+  if (ci === -1) {
+    const guessed = guessPackGroup(text);
+    if (guessed) {
+      ci = state.packing.findIndex(g => g.cat.toLowerCase() === guessed.toLowerCase());
+      if (ci === -1) {
+        // Rule matched but group doesn't exist — create the broad suggested group
+        state.packing.push({ cat: guessed, items: [] });
+        ci = state.packing.length - 1;
+      }
+    }
   }
 
   if (ci === -1) {
-    // No keyword match at all — create a sensibly named new group
-    const newGroup = smartGroupName(text);
-    // Check if a group with that name already exists
-    ci = state.packing.findIndex(g => g.cat.toLowerCase() === newGroup.toLowerCase());
-    if (ci === -1) {
-      state.packing.push({ cat: newGroup, items: [] });
-      ci = state.packing.length - 1;
-    }
+    // No match — show suggestion prompt instead of auto-creating
+    const suggestions = getBroadSuggestions(text);
+    showGroupSuggestion(text, suggestions);
+    return;
   }
 
   packExpanded[ci] = true;
   state.packing[ci].items.push({ id: 'p'+Date.now(), text, checked: false });
   save();
   inp.value = '';
-  document.getElementById('quick-add-preview').innerHTML = '';
+  const preview = document.getElementById('quick-add-preview');
+  if (preview) preview.innerHTML = '';
+  hideSuggestion();
   renderPacking();
-  // Brief flash to show where it landed
   setTimeout(() => {
     const el = document.getElementById(`pack-body-${ci}`);
     if (el) { el.style.background='rgba(74,124,74,0.1)'; setTimeout(()=>el.style.background='',800); }
   }, 50);
+}
+
+function showGroupSuggestion(text, groups) {
+  const preview = document.getElementById('quick-add-preview');
+  if (!preview) return;
+  const generalExists = state.packing.some(g => g.cat === 'General');
+  let btns = groups.map((g,i) => `<button class="sugg-btn" onclick="pickSuggestion('${g.replace(/'/g,"\\'")}','${text.replace(/'/g,"\\'")}')">${g}</button>`).join('');
+  btns += `<button class="sugg-btn sugg-general" onclick="pickGeneral('${text.replace(/'/g,"\\'")}')">📦 General</button>`;
+  preview.innerHTML = `<div class="sugg-wrap">
+    <span class="sugg-label">No group found — pick one:</span>
+    <div class="sugg-btns">${btns}</div>
+  </div>`;
+}
+
+function hideSuggestion() {
+  const preview = document.getElementById('quick-add-preview');
+  if (preview) preview.innerHTML = '';
+}
+
+function pickSuggestion(groupName, text) {
+  const ci = state.packing.findIndex(g => g.cat === groupName);
+  if (ci === -1) return;
+  const inp = document.getElementById('quick-pack-input');
+  inp.value = text;
+  quickAddPackItem(ci);
+}
+
+function pickGeneral(text) {
+  let ci = state.packing.findIndex(g => g.cat === 'General');
+  if (ci === -1) {
+    state.packing.push({ cat: 'General', items: [] });
+    ci = state.packing.length - 1;
+  }
+  const inp = document.getElementById('quick-pack-input');
+  inp.value = text;
+  quickAddPackItem(ci);
 }
 
 // Live preview of which group the item will go to
@@ -1184,11 +1272,99 @@ document.addEventListener('input', e => {
   const preview = document.getElementById('quick-add-preview');
   if (!preview) return;
   if (!text) { preview.innerHTML = ''; return; }
+
+  // Check for similar items across all groups
+  const dupes = findSimilarItems(text);
   const guessed = guessPackGroup(text);
-  const groupName = guessed || smartGroupName(text);
-  const exists = state.packing.some(g => g.cat.toLowerCase() === groupName.toLowerCase());
-  preview.innerHTML = `→ Will add to <strong>${groupName}</strong>${exists ? '' : ' <span style="color:var(--ember-light)">(new group)</span>'}`;
+
+  let html = '';
+
+  // Show duplicates first if found
+  if (dupes.length) {
+    html += `<div class="dupe-wrap">
+      <div class="dupe-label">⚠️ Similar item${dupes.length>1?'s':''} already in your list:</div>
+      ${dupes.map(d => `
+        <div class="dupe-item">
+          <span class="dupe-text">${escHtml(d.text)}</span>
+          <span class="dupe-group">${escHtml(d.group)}</span>
+        </div>`).join('')}
+      <div class="dupe-actions">
+        <button class="sugg-btn sugg-general" onclick="forceAdd()">➕ Add anyway</button>
+        <button class="sugg-btn" onclick="document.getElementById('quick-pack-input').value='';document.getElementById('quick-add-preview').innerHTML=''">✕ Cancel</button>
+      </div>
+    </div>`;
+  } else if (guessed) {
+    const exists = state.packing.some(g => g.cat.toLowerCase() === guessed.toLowerCase());
+    html = `→ Will add to <strong>${guessed}</strong>${exists ? '' : ' <span style="color:var(--ember-light)">(new group)</span>'}`;
+  } else {
+    html = `<span style="color:var(--sage)">→ No group matched — you'll pick one when you add</span>`;
+  }
+  preview.innerHTML = html;
 });
+
+function findSimilarItems(text) {
+  const lower = text.toLowerCase().trim();
+  const results = [];
+  if (!lower || lower.length < 2) return results;
+  state.packing.forEach(cat => {
+    cat.items.forEach(item => {
+      const itemLower = item.text.toLowerCase();
+      // Exact match
+      if (itemLower === lower) { results.push({ text: item.text, group: cat.cat, exact: true }); return; }
+      // One contains the other
+      if (itemLower.includes(lower) || lower.includes(itemLower)) { results.push({ text: item.text, group: cat.cat, exact: false }); return; }
+      // Word overlap — share at least one significant word (3+ chars)
+      const inputWords = lower.split(/\s+/).filter(w => w.length >= 3);
+      const itemWords = itemLower.split(/\s+/).filter(w => w.length >= 3);
+      if (inputWords.some(w => itemWords.includes(w))) { results.push({ text: item.text, group: cat.cat, exact: false }); }
+    });
+  });
+  return results;
+}
+
+function forceAdd() {
+  const inp = document.getElementById('quick-pack-input');
+  const text = inp.value.trim();
+  if (!text) return;
+  // Clear dupe warning and proceed with normal add
+  document.getElementById('quick-add-preview').innerHTML = '';
+  quickAddPackItem();
+}
+
+// ============================================================
+// DRAG AND DROP
+// ============================================================
+let dragItem = null; // { ci, ii, text, checked, id }
+
+function onDragStart(e, ci, ii) {
+  dragItem = { ci, ii, ...state.packing[ci].items[ii] };
+  e.dataTransfer.effectAllowed = 'move';
+  e.target.style.opacity = '0.4';
+}
+function onDragEnd(e) {
+  e.target.style.opacity = '1';
+  dragItem = null;
+  document.querySelectorAll('.pack-group').forEach(g => g.classList.remove('drag-over'));
+}
+function onDragOver(e, ci) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  document.querySelectorAll('.pack-group').forEach(g => g.classList.remove('drag-over'));
+  const groupEl = document.querySelector(`.pack-group[data-ci="${ci}"]`);
+  if (groupEl) groupEl.classList.add('drag-over');
+}
+function onDrop(e, targetCi) {
+  e.preventDefault();
+  document.querySelectorAll('.pack-group').forEach(g => g.classList.remove('drag-over'));
+  if (!dragItem || dragItem.ci === targetCi) return;
+  // Remove from source
+  state.packing[dragItem.ci].items.splice(dragItem.ii, 1);
+  // Add to target
+  state.packing[targetCi].items.push({ id: dragItem.id||('p'+Date.now()), text: dragItem.text, checked: dragItem.checked });
+  packExpanded[targetCi] = true;
+  save();
+  renderPacking();
+}
 function togglePack(ci,ii) { state.packing[ci].items[ii].checked=!state.packing[ci].items[ii].checked; save(); renderPacking(); }
 function deletePack(ci,ii) { state.packing[ci].items.splice(ii,1); save(); renderPacking(); }
 function addPackItem(ci) {
