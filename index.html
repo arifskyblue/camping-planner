@@ -313,6 +313,26 @@
   .sugg-btn:hover { background: var(--sand); }
   .sugg-general { background: var(--ember); border-color: var(--ember); color: white; }
   .sugg-general:hover { background: var(--ember-light); }
+  .sugg-smart {
+    background: var(--pine) !important;
+    border-color: var(--pine) !important;
+    color: var(--cream) !important;
+  }
+  .sugg-smart:hover { background: var(--forest) !important; }
+  .sugg-divider {
+    font-size: 0.7rem;
+    color: var(--muted);
+    margin: 8px 0 5px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .sugg-divider::before, .sugg-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
   .dupe-wrap { margin-top: 4px; }
   .dupe-label { font-size: 0.74rem; color: #b45309; font-weight: 600; margin-bottom: 6px; }
   .dupe-item {
@@ -1228,13 +1248,65 @@ function quickAddPackItem(forceCi) {
 function showGroupSuggestion(text, groups) {
   const preview = document.getElementById('quick-add-preview');
   if (!preview) return;
-  const generalExists = state.packing.some(g => g.cat === 'General');
-  let btns = groups.map((g,i) => `<button class="sugg-btn" onclick="pickSuggestion('${g.replace(/'/g,"\\'")}','${text.replace(/'/g,"\\'")}')">${g}</button>`).join('');
-  btns += `<button class="sugg-btn sugg-general" onclick="pickGeneral('${text.replace(/'/g,"\\'")}')">📦 General</button>`;
-  preview.innerHTML = `<div class="sugg-wrap">
-    <span class="sugg-label">No group found — pick one:</span>
-    <div class="sugg-btns">${btns}</div>
-  </div>`;
+
+  // Smart semantic suggestions based on what the item sounds like
+  const smartSuggestions = getSmartSuggestions(text);
+
+  let html = `<div class="sugg-wrap">`;
+
+  if (smartSuggestions.length) {
+    html += `<span class="sugg-label">💡 Suggested groups for <strong style="color:var(--forest)">${escHtml(text)}</strong>:</span>
+    <div class="sugg-btns">`;
+    smartSuggestions.forEach(g => {
+      const exists = state.packing.some(c => c.cat.toLowerCase() === g.toLowerCase());
+      html += `<button class="sugg-btn sugg-smart" onclick="pickSuggestion('${g.replace(/'/g,"\\'")}','${text.replace(/'/g,"\\'")}')">${g}${exists?'':' <span style="font-size:0.65rem;opacity:0.7">+new</span>'}</button>`;
+    });
+    html += `</div><div class="sugg-divider">or pick an existing group:</div>`;
+  } else {
+    html += `<span class="sugg-label">No group matched — pick one:</span>`;
+  }
+
+  html += `<div class="sugg-btns">`;
+  groups.forEach(g => {
+    html += `<button class="sugg-btn" onclick="pickSuggestion('${g.replace(/'/g,"\\'")}','${text.replace(/'/g,"\\'")}')">${g}</button>`;
+  });
+  html += `<button class="sugg-btn sugg-general" onclick="pickGeneral('${text.replace(/'/g,"\\'")}')">📦 General</button>`;
+  html += `</div></div>`;
+
+  preview.innerHTML = html;
+}
+
+// Semantic suggestions — what broad category does this item SOUND like?
+const SEMANTIC_RULES = [
+  { group:'Electronics',        words:['ipad','tablet','phone','laptop','computer','kindle','e-reader','earphone','headphone','airpod','speaker','charger','cable','adapter','power','battery','solar','camera','gopro','drone','monitor','keyboard','mouse','hub'] },
+  { group:'Navigation & Maps',  words:['map','compass','gps','trail','guide','guidebook','atlas','navigation','satellite','garmin','watch','altimeter'] },
+  { group:'Water & Hydration',  words:['water','hydration','bottle','filter','purifier','pump','bladder','canteen','flask','jug','reservoir','straw','lifestraw'] },
+  { group:'Food & Snacks',      words:['snack','food','bar','granola','trail mix','jerky','nut','nuts','chocolate','candy','meal','protein','cracker','biscuit','instant','freeze dried'] },
+  { group:'Lighting',           words:['light','lamp','lantern','torch','candle','headlamp','string','fairy','solar','led','glow','beacon'] },
+  { group:'Tools & Camp Gear',  words:['axe','hatchet','saw','shovel','rope','cord','tape','hammer','mallet','knife','multi','tool','repair','pump','fix','kit','trowel'] },
+  { group:'Kids & Baby',        words:['kid','kids','child','children','baby','toddler','infant','diaper','stroller','carrier','toy','toys','playpen','monitor','wipe','wipes','formula'] },
+  { group:'Pets',               words:['dog','cat','pet','leash','collar','bowl','food','treat','kennel','crate','poop','bag','flea','tick'] },
+  { group:'Medical',            words:['medicine','medication','pill','tablet','prescription','inhaler','epipen','allergy','antibiotic','pain','relief','cream','ointment','bandage','wrap','sling','brace'] },
+  { group:'Documents & Admin',  words:['passport','id','license','permit','booking','reservation','insurance','card','wallet','cash','document','paper','receipt','ticket','reservation','confirmation'] },
+];
+
+function getSmartSuggestions(text) {
+  const lower = text.toLowerCase();
+  const matched = [];
+  for (const rule of SEMANTIC_RULES) {
+    if (rule.words.some(w => lower.includes(w) || w.includes(lower))) {
+      if (!matched.includes(rule.group)) matched.push(rule.group);
+    }
+  }
+  // Also partially match on first 3 chars for short words
+  if (matched.length === 0 && lower.length >= 3) {
+    for (const rule of SEMANTIC_RULES) {
+      if (rule.words.some(w => w.startsWith(lower.slice(0,3)))) {
+        if (!matched.includes(rule.group)) matched.push(rule.group);
+      }
+    }
+  }
+  return matched.slice(0, 3); // max 3 smart suggestions
 }
 
 function hideSuggestion() {
