@@ -550,7 +550,28 @@
   }
   .toast.show { transform: translateX(-50%) translateY(0); }
 
-  /* BUDGET */
+  .trip-select {
+    flex: 1;
+    min-width: 0;
+    padding: 6px 10px !important;
+    background: rgba(255,255,255,0.12) !important;
+    border: 1px solid rgba(255,255,255,0.2) !important;
+    color: var(--cream) !important;
+    border-radius: 8px !important;
+    font-size: 0.82rem !important;
+    font-weight: 600;
+    max-width: 260px;
+  }
+  .trip-select option { color: var(--text); background: white; }
+  .view-mode-banner {
+    background: #e65100;
+    color: white;
+    text-align: center;
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+  }
   .contrib-row {
     display: flex;
     align-items: center;
@@ -646,9 +667,11 @@
   <div class="header-top">
     <div>
       <h1>🏕️ Camp<span>Planner</span></h1>
-      <div class="header-sub">Family camping organizer</div>
+      <div class="header-sub" id="view-mode-label">Family camping organizer</div>
     </div>
+    <div id="header-actions" style="display:flex;gap:5px;align-items:center"></div>
   </div>
+  <div id="trip-selector-wrap" style="margin:8px 0 4px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"></div>
   <div class="sync-bar">
     <div class="sync-status" id="sync-status">⬤ Not synced yet</div>
     <button class="btn-sync btn-load-sync" id="btn-load" onclick="loadFromSheet()">↓ Load Latest</button>
@@ -870,6 +893,27 @@
   </div>
 </div>
 
+<!-- NEW TRIP MODAL -->
+<div class="modal-overlay" id="new-trip-modal">
+  <div class="modal">
+    <div class="modal-title">🏕️ New Trip</div>
+    <div class="modal-sub">Create a fresh trip or copy your last one</div>
+    <div class="form-group">
+      <label>Trip Name</label>
+      <input type="text" id="new-trip-name" placeholder="e.g. Waskesiu Summer 2025">
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-top:14px">
+      <button class="btn btn-primary" onclick="createNewTrip(true)" style="justify-content:center">
+        📋 Copy from last trip (packing list + contributors)
+      </button>
+      <button class="btn btn-forest" onclick="createNewTrip(false)" style="justify-content:center">
+        ✨ Start completely fresh
+      </button>
+      <button class="btn btn-outline" onclick="closeNewTripModal()" style="justify-content:center">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -886,7 +930,7 @@ async function saveToSheet() {
   status.className = 'sync-status syncing';
   status.textContent = '⬤ Saving to cloud...';
   try {
-    const payload = JSON.stringify(state);
+    const payload = JSON.stringify(appData);
     await fetch(SCRIPT_URL, {
       method: 'POST',
       mode: 'no-cors',
@@ -928,7 +972,17 @@ async function loadFromSheet() {
       return;
     }
     const loaded = JSON.parse(text);
-    state = { ...state, ...loaded };
+    // Support both old single-state and new multi-trip format
+    if (loaded.trips) {
+      appData = loaded;
+    } else {
+      // Old format — wrap as single trip
+      const migrated = { ...newTripData(), ...loaded, id:'t_cloud', name: loaded.trip&&loaded.trip.location ? loaded.trip.location : 'Imported Trip' };
+      appData.trips = [migrated];
+      appData.currentTripId = migrated.id;
+    }
+    state = appData.trips.find(t=>t.id===appData.currentTripId) || appData.trips[0];
+    appData.currentTripId = state.id;
     save();
     restoreUI();
     const now = new Date();
@@ -948,70 +1002,131 @@ async function loadFromSheet() {
 // ============================================================
 // STATE
 // ============================================================
-let state = {
-  trip: { checkinDate:'', checkinTime:'14:00', checkoutDate:'', checkoutTime:'12:00', location:'', people:'', notes:'' },
-  rules: { breakfast:'10:00', lunch:'13:00', dinner:'17:00' },
-  meals: {},
-  packing: [
-    { cat:'Shelter', items:[
-      {id:'p1',text:'Tent + poles + stakes',checked:false},
-      {id:'p2',text:'Sleeping bags',checked:false},
-      {id:'p3',text:'Sleeping pads / air mattress',checked:false},
-      {id:'p4',text:'Tarp / rain fly',checked:false},
-    ]},
-    { cat:'Kitchen', items:[
-      {id:'p5',text:'Camp stove + fuel',checked:false},
-      {id:'p6',text:'Pots, pans, utensils',checked:false},
-      {id:'p7',text:'Plates, cups, cutlery',checked:false},
-      {id:'p8',text:'Cutting board + knife',checked:false},
-      {id:'p9',text:'Cooler + ice packs',checked:false},
-      {id:'p10',text:'Can opener',checked:false},
-      {id:'p11',text:'Dish soap + sponge',checked:false},
-      {id:'p12',text:'Tin foil',checked:false},
-    ]},
-    { cat:'Clothing', items:[
-      {id:'p13',text:'Warm jacket / fleece',checked:false},
-      {id:'p14',text:'Rain jacket',checked:false},
-      {id:'p15',text:'Layers (shirts, pants)',checked:false},
-      {id:'p16',text:'Socks & underwear (extra)',checked:false},
-      {id:'p17',text:'Hiking boots / camp shoes',checked:false},
-      {id:'p18',text:'Hat + sunglasses',checked:false},
-    ]},
-    { cat:'Safety & Hygiene', items:[
-      {id:'p19',text:'First aid kit',checked:false},
-      {id:'p20',text:'Bug spray',checked:false},
-      {id:'p21',text:'Sunscreen',checked:false},
-      {id:'p22',text:'Toilet paper',checked:false},
-      {id:'p23',text:'Hand sanitizer',checked:false},
-      {id:'p24',text:'Headlamp + batteries',checked:false},
-      {id:'p25',text:'Matches / lighter',checked:false},
-    ]},
-    { cat:'Fun & Extras', items:[
-      {id:'p26',text:'Camping chairs',checked:false},
-      {id:'p27',text:'Firewood / firestarter',checked:false},
-      {id:'p28',text:'Cards / games',checked:false},
-      {id:'p29',text:'Phone charger / power bank',checked:false},
-    ]},
-  ],
-  manualGrocery: [],
-  contributors: [], // [{id, name, share}]  share is a number like 1, 2, 0.5
-  expenses: [],     // [{id, desc, store, cat, amount, paidBy, date}]
+const DEFAULT_PACKING = [
+  { cat:'Shelter', items:[
+    {id:'p1',text:'Tent + poles + stakes',checked:false},
+    {id:'p2',text:'Sleeping bags',checked:false},
+    {id:'p3',text:'Sleeping pads / air mattress',checked:false},
+    {id:'p4',text:'Tarp / rain fly',checked:false},
+  ]},
+  { cat:'Kitchen', items:[
+    {id:'p5',text:'Camp stove + fuel',checked:false},
+    {id:'p6',text:'Pots, pans, utensils',checked:false},
+    {id:'p7',text:'Plates, cups, cutlery',checked:false},
+    {id:'p8',text:'Cutting board + knife',checked:false},
+    {id:'p9',text:'Cooler + ice packs',checked:false},
+    {id:'p10',text:'Can opener',checked:false},
+    {id:'p11',text:'Dish soap + sponge',checked:false},
+    {id:'p12',text:'Tin foil',checked:false},
+  ]},
+  { cat:'Clothing', items:[
+    {id:'p13',text:'Warm jacket / fleece',checked:false},
+    {id:'p14',text:'Rain jacket',checked:false},
+    {id:'p15',text:'Layers (shirts, pants)',checked:false},
+    {id:'p16',text:'Socks & underwear (extra)',checked:false},
+    {id:'p17',text:'Hiking boots / camp shoes',checked:false},
+    {id:'p18',text:'Hat + sunglasses',checked:false},
+  ]},
+  { cat:'Safety & Hygiene', items:[
+    {id:'p19',text:'First aid kit',checked:false},
+    {id:'p20',text:'Bug spray',checked:false},
+    {id:'p21',text:'Sunscreen',checked:false},
+    {id:'p22',text:'Toilet paper',checked:false},
+    {id:'p23',text:'Hand sanitizer',checked:false},
+    {id:'p24',text:'Headlamp + batteries',checked:false},
+    {id:'p25',text:'Matches / lighter',checked:false},
+  ]},
+  { cat:'Fun & Extras', items:[
+    {id:'p26',text:'Camping chairs',checked:false},
+    {id:'p27',text:'Firewood / firestarter',checked:false},
+    {id:'p28',text:'Cards / games',checked:false},
+    {id:'p29',text:'Phone charger / power bank',checked:false},
+  ]},
+];
+
+function newTripData(copyFrom) {
+  if (copyFrom) {
+    // Copy packing (unchecked) and contributors, clear trip dates/meals/expenses
+    const packCopy = JSON.parse(JSON.stringify(copyFrom.packing)).map(cat=>({
+      ...cat, items: cat.items.map(i=>({...i, checked:false}))
+    }));
+    return {
+      id: 't'+Date.now(),
+      name: 'New Trip',
+      trip: { checkinDate:'', checkinTime:'14:00', checkoutDate:'', checkoutTime:'12:00', location:'', people:'', notes:'' },
+      rules: { ...copyFrom.rules },
+      meals: {},
+      packing: packCopy,
+      manualGrocery: [],
+      contributors: JSON.parse(JSON.stringify(copyFrom.contributors||[])),
+      expenses: [],
+    };
+  }
+  return {
+    id: 't'+Date.now(),
+    name: 'New Trip',
+    trip: { checkinDate:'', checkinTime:'14:00', checkoutDate:'', checkoutTime:'12:00', location:'', people:'', notes:'' },
+    rules: { breakfast:'10:00', lunch:'13:00', dinner:'17:00' },
+    meals: {},
+    packing: JSON.parse(JSON.stringify(DEFAULT_PACKING)),
+    manualGrocery: [],
+    contributors: [],
+    expenses: [],
+  };
+}
+
+// Top-level storage — list of trips + which one is active
+let appData = {
+  trips: [],
+  currentTripId: null,
 };
+
+// state always points to the current trip object inside appData.trips
+let state = null;
 
 let activeModalKey = null;
 let activeTab = 'trip';
+let IS_VIEW_MODE = false;
 
 // ============================================================
 // PERSIST LOCALLY
 // ============================================================
 function save() {
-  try { localStorage.setItem('campplanner_v3', JSON.stringify(state)); } catch(e){}
+  if (IS_VIEW_MODE) return;
+  try { localStorage.setItem('campplanner_v4', JSON.stringify(appData)); } catch(e){}
 }
+
 function load() {
   try {
-    const raw = localStorage.getItem('campplanner_v3');
-    if (raw) state = { ...state, ...JSON.parse(raw) };
-  } catch(e){}
+    const raw = localStorage.getItem('campplanner_v4');
+    if (raw) {
+      appData = JSON.parse(raw);
+      if (!appData.trips) appData.trips = [];
+    }
+    // Migrate old v3 data
+    if (!appData.trips.length) {
+      const old = localStorage.getItem('campplanner_v3');
+      if (old) {
+        const parsed = JSON.parse(old);
+        const migrated = { ...newTripData(), ...parsed, id:'t_migrated', name: parsed.trip&&parsed.trip.location ? parsed.trip.location : 'My First Trip' };
+        appData.trips.push(migrated);
+        appData.currentTripId = migrated.id;
+      }
+    }
+    if (!appData.trips.length) {
+      const t = newTripData();
+      t.name = 'My First Trip';
+      appData.trips.push(t);
+      appData.currentTripId = t.id;
+    }
+    if (!appData.currentTripId) appData.currentTripId = appData.trips[0].id;
+    state = appData.trips.find(t=>t.id===appData.currentTripId) || appData.trips[0];
+    appData.currentTripId = state.id;
+  } catch(e) {
+    const t = newTripData(); t.name='My First Trip';
+    appData = { trips:[t], currentTripId:t.id };
+    state = t;
+  }
 }
 
 // ============================================================
@@ -1030,8 +1145,74 @@ function showTab(tab, btn) {
 }
 
 // ============================================================
-// TRIP
+// TRIP MANAGEMENT
 // ============================================================
+function renderTripSelector() {
+  const el = document.getElementById('trip-selector-wrap');
+  if (!el) return;
+  if (IS_VIEW_MODE) { el.innerHTML='<span style="color:var(--sage);font-size:0.75rem">👁 View Only</span>'; return; }
+  const opts = appData.trips.map(t=>`<option value="${t.id}" ${t.id===appData.currentTripId?'selected':''}>${escHtml(t.name||'Unnamed Trip')}${t.trip&&t.trip.location?' — '+escHtml(t.trip.location):''}</option>`).join('');
+  el.innerHTML=`<select class="trip-select" onchange="switchTrip(this.value)">${opts}</select>
+    <button class="btn-sync btn-load-sync" onclick="openNewTripModal()" style="white-space:nowrap">＋ New</button>`;
+}
+
+function switchTrip(id) {
+  save();
+  appData.currentTripId = id;
+  state = appData.trips.find(t=>t.id===id);
+  save();
+  restoreUI();
+  showToast(`Switched to: ${state.name||'Trip'}`);
+}
+
+function openNewTripModal() {
+  document.getElementById('new-trip-modal').classList.add('open');
+}
+function closeNewTripModal() {
+  document.getElementById('new-trip-modal').classList.remove('open');
+}
+
+function createNewTrip(copyLast) {
+  const nameEl = document.getElementById('new-trip-name');
+  const name = nameEl ? nameEl.value.trim() : '';
+  const lastTrip = appData.trips[appData.trips.length-1];
+  const t = newTripData(copyLast && lastTrip ? lastTrip : null);
+  t.name = name || `Trip ${appData.trips.length+1}`;
+  appData.trips.push(t);
+  appData.currentTripId = t.id;
+  state = t;
+  save();
+  closeNewTripModal();
+  restoreUI();
+  showToast(`✓ Created: ${t.name}`);
+}
+
+function deleteCurrentTrip() {
+  if (appData.trips.length <= 1) { showToast('Cannot delete your only trip.'); return; }
+  if (!confirm(`Delete "${state.name||'this trip'}"? This cannot be undone.`)) return;
+  appData.trips = appData.trips.filter(t=>t.id!==appData.currentTripId);
+  appData.currentTripId = appData.trips[0].id;
+  state = appData.trips[0];
+  save();
+  restoreUI();
+  showToast('Trip deleted.');
+}
+
+function renameCurrentTrip() {
+  const name = prompt('Trip name:', state.name||'');
+  if (!name||!name.trim()) return;
+  state.name = name.trim();
+  save();
+  renderTripSelector();
+  showToast('Trip renamed.');
+}
+
+function getViewOnlyLink() {
+  const url = window.location.href.split('?')[0] + '?view=1';
+  navigator.clipboard.writeText(url).then(()=>showToast('View-only link copied! Share with friends.'));
+}
+
+
 function onTripChange() {
   state.trip.checkinDate = document.getElementById('checkin-date').value;
   state.trip.checkinTime = document.getElementById('checkin-time').value;
@@ -2035,6 +2216,10 @@ function showToast(msg) {
 // RESTORE UI FROM STATE
 // ============================================================
 function restoreUI() {
+  // Clear all inputs first so switching trips doesn't leave stale values
+  ['checkin-date','checkin-time','checkout-date','checkout-time','trip-location','trip-people','trip-notes'].forEach(id=>{
+    const el = document.getElementById(id); if(el) el.value='';
+  });
   if(state.trip.checkinDate) document.getElementById('checkin-date').value=state.trip.checkinDate;
   if(state.trip.checkinTime) document.getElementById('checkin-time').value=state.trip.checkinTime;
   if(state.trip.checkoutDate) document.getElementById('checkout-date').value=state.trip.checkoutDate;
@@ -2042,20 +2227,58 @@ function restoreUI() {
   if(state.trip.location) document.getElementById('trip-location').value=state.trip.location;
   if(state.trip.people) document.getElementById('trip-people').value=state.trip.people;
   if(state.trip.notes) document.getElementById('trip-notes').value=state.trip.notes;
-  if(state.rules.breakfast) document.getElementById('rule-breakfast').value=state.rules.breakfast;
-  if(state.rules.lunch) document.getElementById('rule-lunch').value=state.rules.lunch;
-  if(state.rules.dinner) document.getElementById('rule-dinner').value=state.rules.dinner;
+  if(state.rules&&state.rules.breakfast) document.getElementById('rule-breakfast').value=state.rules.breakfast;
+  if(state.rules&&state.rules.lunch) document.getElementById('rule-lunch').value=state.rules.lunch;
+  if(state.rules&&state.rules.dinner) document.getElementById('rule-dinner').value=state.rules.dinner;
+  renderTripSelector();
   renderTripSummary();
   if(activeTab==='meals'){ updateMealsTripBar(); buildMealTable(); }
   if(activeTab==='packing') renderPacking();
   if(activeTab==='grocery') renderGrocery();
+  if(activeTab==='budget') renderBudget();
 }
 
 // ============================================================
 // INIT
 // ============================================================
 function init() {
+  // Check for view-only mode
+  const params = new URLSearchParams(window.location.search);
+  IS_VIEW_MODE = params.get('view') === '1';
+
   load();
+
+  if (IS_VIEW_MODE) {
+    // In view mode: load from sheet immediately, hide edit controls
+    document.getElementById('view-mode-label').textContent = '👁 View Only — Read Only Mode';
+    const syncBar = document.querySelector('.sync-bar');
+    if (syncBar) syncBar.style.display='none';
+    document.getElementById('btn-save') && (document.getElementById('btn-save').style.display='none');
+    // Add banner
+    const banner = document.createElement('div');
+    banner.className='view-mode-banner';
+    banner.textContent='👁 VIEW ONLY MODE — You can see but not edit this trip';
+    document.querySelector('.tabs').before(banner);
+    // Auto-load from sheet
+    loadFromSheet();
+    // Disable all inputs after a short delay
+    setTimeout(()=>{
+      document.querySelectorAll('input,textarea,select,button:not(#btn-load)').forEach(el=>{
+        if(el.id==='btn-load') return;
+        el.disabled=true;
+        el.style.pointerEvents='none';
+      });
+    }, 1500);
+  }
+
+  // Render header actions (hide in view mode)
+  if (!IS_VIEW_MODE) {
+    document.getElementById('header-actions').innerHTML=`
+      <button class="btn-sync btn-load-sync" onclick="getViewOnlyLink()" title="Copy view-only link for friends" style="font-size:0.7rem">👁 Share</button>
+      <button class="btn-sync btn-load-sync" onclick="renameCurrentTrip()" title="Rename trip" style="font-size:0.7rem">✏️</button>
+      <button class="btn-sync btn-load-sync" onclick="deleteCurrentTrip()" title="Delete trip" style="font-size:0.72rem;color:#ef9a9a">🗑</button>`;
+  }
+
   restoreUI();
 }
 init();
