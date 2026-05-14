@@ -550,7 +550,90 @@
   }
   .toast.show { transform: translateX(-50%) translateY(0); }
 
-  @media (max-width: 600px) {
+  /* BUDGET */
+  .contrib-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+  .contrib-row:last-child { border-bottom: none; }
+  .contrib-name { font-weight: 600; font-size: 0.88rem; flex: 1; min-width: 80px; }
+  .contrib-share-wrap { display: flex; flex-direction: column; }
+  .contrib-share-input { width: 70px !important; text-align: center; font-weight: 700; color: var(--ember) !important; }
+  .contrib-paid { display: flex; flex-direction: column; align-items: flex-end; min-width: 60px; }
+  .exp-cat-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--forest);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 8px 0 4px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 4px;
+  }
+  .exp-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(0,0,0,0.04);
+  }
+  .exp-row:last-of-type { border-bottom: none; }
+  .exp-info { flex: 1; min-width: 0; }
+  .exp-desc { font-size: 0.88rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .exp-meta { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+  .exp-amount { font-weight: 700; font-size: 0.92rem; color: var(--ember); flex-shrink: 0; }
+  .exp-total-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 4px 2px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--forest);
+    border-top: 2px solid var(--border);
+    margin-top: 6px;
+  }
+  .settlement-table { width: 100%; }
+  .settle-header {
+    display: grid;
+    grid-template-columns: 1.5fr 0.6fr 1fr 1fr 1.2fr;
+    gap: 6px;
+    padding: 7px 6px;
+    background: var(--forest);
+    color: var(--cream);
+    border-radius: 8px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 4px;
+  }
+  .settle-row {
+    display: grid;
+    grid-template-columns: 1.5fr 0.6fr 1fr 1fr 1.2fr;
+    gap: 6px;
+    padding: 9px 6px;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.84rem;
+    align-items: center;
+  }
+  .settle-row:last-child { border-bottom: none; }
+  .settle-name { font-weight: 600; }
+  .settle-share { color: var(--muted); font-size: 0.8rem; }
+  .settle-should { color: var(--muted); }
+  .settle-paid { font-weight: 600; color: var(--forest); }
+  .settle-balance { font-weight: 700; font-size: 0.82rem; }
+  .settle-balance.owed { color: #2e7d32; }
+  .settle-balance.owes { color: #c62828; }
+  .settle-balance.even { color: var(--moss); }
+
+  @media (max-width: 500px) {
+    .settle-header, .settle-row { grid-template-columns: 1fr 0.5fr 1fr 1fr; }
+    .settle-header > div:nth-child(2), .settle-row > div:nth-child(2) { display: none; }
+  }
     .form-row { grid-template-columns: 1fr; }
     main { padding: 14px 10px 80px; }
     .tab-btn { padding: 10px 12px; font-size: 0.7rem; }
@@ -578,6 +661,7 @@
   <button class="tab-btn" onclick="showTab('meals', this)">🍳 Meals</button>
   <button class="tab-btn" onclick="showTab('packing', this)">🎒 Packing</button>
   <button class="tab-btn" onclick="showTab('grocery', this)">🛒 Grocery</button>
+  <button class="tab-btn" onclick="showTab('budget', this)">💰 Budget</button>
 </div>
 
 <main>
@@ -689,7 +773,84 @@
   <div id="grocery-container"></div>
 </div>
 
+<!-- BUDGET -->
+<div id="tab-budget" class="section">
+  <div id="budget-summary-wrap"></div>
+
+  <!-- CONTRIBUTORS -->
+  <div class="card">
+    <div class="card-title">👥 Contributors & Split</div>
+    <p style="font-size:0.78rem;color:var(--muted);margin-bottom:12px">Add everyone sharing the trip cost. Set their split share (e.g. 1 = equal, 2 = double share).</p>
+    <div id="contributors-list"></div>
+    <div class="flex-gap" style="margin-top:10px">
+      <input type="text" id="new-contrib-name" placeholder="Name (e.g. Ariful, Wife)" style="flex:1">
+      <button class="btn btn-primary btn-sm" onclick="addContributor()">+ Add</button>
+    </div>
+  </div>
+
+  <!-- EXPENSES -->
+  <div class="card">
+    <div class="flex-between">
+      <div class="card-title" style="margin-bottom:0">🧾 Expenses</div>
+      <button class="btn btn-primary btn-sm" onclick="openExpenseModal()">+ Add Expense</button>
+    </div>
+    <p style="font-size:0.78rem;color:var(--muted);margin:8px 0 12px">Track every purchase — groceries, supplies, fuel, fees.</p>
+    <div id="expenses-list"></div>
+  </div>
+
+  <!-- SETTLEMENT -->
+  <div class="card" id="settlement-card">
+    <div class="card-title">⚖️ Who Owes What</div>
+    <div id="settlement-wrap"></div>
+  </div>
+</div>
+
 </main>
+
+<!-- EXPENSE MODAL -->
+<div class="modal-overlay" id="expense-modal">
+  <div class="modal">
+    <div class="modal-title" id="expense-modal-title">Add Expense</div>
+    <div class="modal-sub">Enter the purchase details</div>
+    <div class="form-group">
+      <label>Item / Description</label>
+      <input type="text" id="exp-desc" placeholder="e.g. Groceries, Firewood, Park fee">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Store</label>
+        <input type="text" id="exp-store" placeholder="e.g. Walmart, Dollarama">
+      </div>
+      <div class="form-group">
+        <label>Category</label>
+        <select id="exp-cat">
+          <option>🛒 Groceries</option>
+          <option>⛽ Fuel</option>
+          <option>🏕️ Camp Fees</option>
+          <option>🍽️ Eating Out</option>
+          <option>🛠️ Supplies</option>
+          <option>🎉 Activities</option>
+          <option>💊 Medical</option>
+          <option>📦 Other</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Amount ($)</label>
+        <input type="text" id="exp-amount" placeholder="0.00" inputmode="decimal">
+      </div>
+      <div class="form-group">
+        <label>Paid by</label>
+        <select id="exp-paidby"></select>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button class="btn btn-outline" onclick="closeExpenseModal()" style="flex:1">Cancel</button>
+      <button class="btn btn-primary" onclick="saveExpense()" style="flex:1">Save</button>
+    </div>
+  </div>
+</div>
 
 <!-- INGREDIENT MODAL -->
 <div class="modal-overlay" id="ing-modal">
@@ -833,6 +994,8 @@ let state = {
     ]},
   ],
   manualGrocery: [],
+  contributors: [], // [{id, name, share}]  share is a number like 1, 2, 0.5
+  expenses: [],     // [{id, desc, store, cat, amount, paidBy, date}]
 };
 
 let activeModalKey = null;
@@ -863,6 +1026,7 @@ function showTab(tab, btn) {
   if (tab === 'meals') { updateMealsTripBar(); buildMealTable(); }
   if (tab === 'packing') renderPacking();
   if (tab === 'grocery') renderGrocery();
+  if (tab === 'budget') renderBudget();
 }
 
 // ============================================================
@@ -1602,8 +1766,221 @@ function addManualGrocery() {
 }
 
 // ============================================================
-// EXPORTS
+// BUDGET
 // ============================================================
+let editingExpenseId = null;
+
+function renderBudget() {
+  renderContributors();
+  renderExpenses();
+  renderSettlement();
+  renderBudgetSummary();
+}
+
+function renderBudgetSummary() {
+  const el = document.getElementById('budget-summary-wrap');
+  const total = state.expenses.reduce((a,e)=>a+parseFloat(e.amount||0),0);
+  const contribs = state.contributors.length;
+  if (!total && !contribs) { el.innerHTML=''; return; }
+  const totalShares = state.contributors.reduce((a,c)=>a+parseFloat(c.share||1),0);
+  el.innerHTML=`<div class="trip-bar" style="margin-bottom:14px">
+    <div class="trip-bar-item"><div class="trip-bar-label">Total Spent</div><strong>$${total.toFixed(2)}</strong></div>
+    <div class="trip-bar-item"><div class="trip-bar-label">Contributors</div><strong>${contribs}</strong></div>
+    <div class="trip-bar-item"><div class="trip-bar-label">Expenses</div><strong>${state.expenses.length}</strong></div>
+    ${contribs>0?`<div class="trip-bar-item"><div class="trip-bar-label">Per Equal Share</div><strong>$${totalShares>0?(total/totalShares).toFixed(2):'0.00'}</strong></div>`:''}
+  </div>`;
+}
+
+function renderContributors() {
+  const el = document.getElementById('contributors-list');
+  if (!state.contributors.length) {
+    el.innerHTML='<p style="font-size:0.82rem;color:var(--muted);font-style:italic;padding:4px 0">No contributors yet.</p>';
+    return;
+  }
+  el.innerHTML = state.contributors.map((c,i)=>`
+    <div class="contrib-row">
+      <div class="contrib-name">${escHtml(c.name)}</div>
+      <div class="contrib-share-wrap">
+        <label style="font-size:0.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:2px">Split share</label>
+        <input type="number" class="contrib-share-input" value="${c.share||1}" min="0.1" step="0.1"
+          onchange="updateContribShare(${i}, this.value)" title="e.g. 1 = equal, 2 = double share, 0.5 = half">
+      </div>
+      <div class="contrib-paid">
+        <div style="font-size:0.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em">Paid</div>
+        <div style="font-weight:700;color:var(--forest)">$${getContribPaid(c.id).toFixed(2)}</div>
+      </div>
+      <button class="btn btn-xs btn-outline" onclick="deleteContributor(${i})" style="padding:2px 6px;color:#c0392b;border-color:#c0392b;flex-shrink:0">✕</button>
+    </div>`).join('');
+}
+
+function getContribPaid(id) {
+  return state.expenses.filter(e=>e.paidBy===id).reduce((a,e)=>a+parseFloat(e.amount||0),0);
+}
+
+function addContributor() {
+  const inp = document.getElementById('new-contrib-name');
+  const name = inp.value.trim();
+  if (!name) return;
+  state.contributors.push({ id: 'c'+Date.now(), name, share: 1 });
+  save(); inp.value=''; renderBudget();
+}
+function updateContribShare(i, val) {
+  state.contributors[i].share = parseFloat(val)||1;
+  save(); renderSettlement(); renderBudgetSummary();
+}
+function deleteContributor(i) {
+  if (!confirm(`Remove ${state.contributors[i].name}?`)) return;
+  const id = state.contributors[i].id;
+  state.contributors.splice(i,1);
+  state.expenses = state.expenses.filter(e=>e.paidBy!==id);
+  save(); renderBudget();
+}
+
+function renderExpenses() {
+  const el = document.getElementById('expenses-list');
+  if (!state.expenses.length) {
+    el.innerHTML='<p style="font-size:0.82rem;color:var(--muted);font-style:italic;padding:4px 0">No expenses yet. Tap + Add Expense to start.</p>';
+    return;
+  }
+  // Group by category
+  const grouped = {};
+  state.expenses.forEach(e=>{
+    if (!grouped[e.cat]) grouped[e.cat]=[];
+    grouped[e.cat].push(e);
+  });
+  let html='';
+  Object.entries(grouped).forEach(([cat,items])=>{
+    const catTotal = items.reduce((a,e)=>a+parseFloat(e.amount||0),0);
+    html+=`<div class="exp-cat-title">${cat} <span style="font-size:0.75rem;font-weight:400;color:var(--muted)">$${catTotal.toFixed(2)}</span></div>`;
+    items.forEach(e=>{
+      const payer = state.contributors.find(c=>c.id===e.paidBy);
+      html+=`<div class="exp-row">
+        <div class="exp-info">
+          <div class="exp-desc">${escHtml(e.desc)}</div>
+          <div class="exp-meta">${e.store?escHtml(e.store)+' · ':''}Paid by <strong>${payer?escHtml(payer.name):'?'}</strong></div>
+        </div>
+        <div class="exp-amount">$${parseFloat(e.amount||0).toFixed(2)}</div>
+        <div style="display:flex;gap:4px;flex-shrink:0">
+          <button class="btn btn-xs btn-outline" onclick="openExpenseModal('${e.id}')" style="padding:2px 6px">✏️</button>
+          <button class="btn btn-xs btn-outline" onclick="deleteExpense('${e.id}')" style="padding:2px 6px;color:#c0392b;border-color:#c0392b">✕</button>
+        </div>
+      </div>`;
+    });
+  });
+  // Total row
+  const total = state.expenses.reduce((a,e)=>a+parseFloat(e.amount||0),0);
+  html+=`<div class="exp-total-row"><span>Total</span><span>$${total.toFixed(2)}</span></div>`;
+  el.innerHTML=html;
+}
+
+function deleteExpense(id) {
+  if (!confirm('Remove this expense?')) return;
+  state.expenses = state.expenses.filter(e=>e.id!==id);
+  save(); renderBudget();
+}
+
+function openExpenseModal(editId) {
+  editingExpenseId = editId||null;
+  const exp = editId ? state.expenses.find(e=>e.id===editId) : null;
+  document.getElementById('expense-modal-title').textContent = exp ? 'Edit Expense' : 'Add Expense';
+  document.getElementById('exp-desc').value = exp?exp.desc:'';
+  document.getElementById('exp-store').value = exp?exp.store:'';
+  document.getElementById('exp-amount').value = exp?exp.amount:'';
+  // Populate paidby dropdown
+  const sel = document.getElementById('exp-paidby');
+  sel.innerHTML = state.contributors.length
+    ? state.contributors.map(c=>`<option value="${c.id}" ${exp&&exp.paidBy===c.id?'selected':''}>${escHtml(c.name)}</option>`).join('')
+    : '<option value="">— Add contributors first —</option>';
+  // Set category
+  const catSel = document.getElementById('exp-cat');
+  if (exp) { for(let o of catSel.options) if(o.value===exp.cat) o.selected=true; }
+  document.getElementById('expense-modal').classList.add('open');
+  document.getElementById('exp-desc').focus();
+}
+function closeExpenseModal() {
+  document.getElementById('expense-modal').classList.remove('open');
+  editingExpenseId=null;
+}
+function saveExpense() {
+  const desc = document.getElementById('exp-desc').value.trim();
+  const amount = document.getElementById('exp-amount').value.trim();
+  if (!desc || !amount) { alert('Please enter description and amount.'); return; }
+  if (!state.contributors.length) { alert('Add at least one contributor first.'); return; }
+  const exp = {
+    id: editingExpenseId||('e'+Date.now()),
+    desc,
+    store: document.getElementById('exp-store').value.trim(),
+    cat: document.getElementById('exp-cat').value,
+    amount: parseFloat(amount)||0,
+    paidBy: document.getElementById('exp-paidby').value,
+    date: new Date().toISOString().split('T')[0],
+  };
+  if (editingExpenseId) {
+    const idx = state.expenses.findIndex(e=>e.id===editingExpenseId);
+    if (idx>=0) state.expenses[idx]=exp;
+  } else {
+    state.expenses.push(exp);
+  }
+  save(); closeExpenseModal(); renderBudget();
+}
+
+function renderSettlement() {
+  const el = document.getElementById('settlement-wrap');
+  if (!state.contributors.length || !state.expenses.length) {
+    el.innerHTML='<p style="font-size:0.82rem;color:var(--muted);font-style:italic">Add contributors and expenses to see settlement.</p>';
+    return;
+  }
+  const total = state.expenses.reduce((a,e)=>a+parseFloat(e.amount||0),0);
+  const totalShares = state.contributors.reduce((a,c)=>a+parseFloat(c.share||1),0);
+  const shareUnit = totalShares>0 ? total/totalShares : 0;
+
+  let html='<div class="settlement-table">';
+  html+=`<div class="settle-header">
+    <div>Person</div><div>Share</div><div>Should Pay</div><div>Paid</div><div>Balance</div>
+  </div>`;
+  state.contributors.forEach(c=>{
+    const shouldPay = shareUnit * parseFloat(c.share||1);
+    const paid = getContribPaid(c.id);
+    const balance = paid - shouldPay;
+    const isOwed = balance >= 0.01;
+    const owes = balance <= -0.01;
+    html+=`<div class="settle-row">
+      <div class="settle-name">${escHtml(c.name)}</div>
+      <div class="settle-share">${c.share||1}x</div>
+      <div class="settle-should">$${shouldPay.toFixed(2)}</div>
+      <div class="settle-paid">$${paid.toFixed(2)}</div>
+      <div class="settle-balance ${isOwed?'owed':owes?'owes':'even'}">
+        ${isOwed?'Gets back $'+(balance.toFixed(2)):owes?'Owes $'+Math.abs(balance).toFixed(2):'✓ Even'}
+      </div>
+    </div>`;
+  });
+  html+='</div>';
+
+  // Plain English summary
+  const owesRows = state.contributors.filter(c=>{
+    const shouldPay = shareUnit * parseFloat(c.share||1);
+    const paid = getContribPaid(c.id);
+    return (paid - shouldPay) <= -0.01;
+  });
+  if (owesRows.length) {
+    html+=`<div style="margin-top:14px;padding:12px;background:var(--sand);border-radius:8px;font-size:0.82rem;color:var(--forest)">
+      <strong>💬 Summary:</strong><br>`;
+    owesRows.forEach(c=>{
+      const shouldPay = shareUnit * parseFloat(c.share||1);
+      const paid = getContribPaid(c.id);
+      const owes = Math.abs(paid-shouldPay).toFixed(2);
+      // Find who to pay — the person who is owed the most
+      const creditor = state.contributors.find(cr=>{
+        const sp = shareUnit * parseFloat(cr.share||1);
+        const p = getContribPaid(cr.id);
+        return (p-sp) >= 0.01;
+      });
+      html+=`<div style="margin-top:4px">→ <strong>${escHtml(c.name)}</strong> owes <strong>$${owes}</strong>${creditor?' to <strong>'+escHtml(creditor.name)+'</strong>':''}</div>`;
+    });
+    html+='</div>';
+  }
+  el.innerHTML=html;
+}
 function exportGroceryExcel() {
   const rows=[['Item','Quantity','Unit','For Meal','Category']];
   const cats=categorizeGrocery(getGroceryItems());
